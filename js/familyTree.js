@@ -3577,6 +3577,36 @@ var familyTree = (function (isTouchDevice){
 		return { nodes: nodes, relLinks: rLinks, childLinks: cLinks, groups: groups };
     };
 
+    var openNodePopup = function(node){
+    	if (node)
+    		console.log('esiste già');
+
+        else {
+	        var xDomain = xScale.domain(),
+				yDomain = yScale.domain(),
+				x = (xDomain[1] - xDomain[0] - nodeWidth) * 0.5,
+				y = (yDomain[1] - yDomain[0] - nodeHeight) * 0.5;
+	    	tmpNode = { x: x, y: y };
+		}
+
+    	$('#node-popup').modal();
+    };
+
+    var openGroupPopup = function(group){
+    	if (group)
+    		console.log('esiste già');
+
+        else {
+	        var xDomain = xScale.domain(),
+				yDomain = yScale.domain(),
+				x = (xDomain[1] - xDomain[0]) * 0.5,
+				y = (yDomain[1] - yDomain[0]) * 0.5;
+	    	tmpGroup = { x: x, y: y };
+		}
+
+    	$('#group-popup').modal();
+    };
+
 	return {
 		init: init,	
 		resize: resize,
@@ -3602,6 +3632,8 @@ var familyTree = (function (isTouchDevice){
 		deleteObjects: deleteObjects,
 		saveAs: saveAs,
 		undo: function() { HistoryManager.undo(); },
-		redo: function() { HistoryManager.redo(); }
+		redo: function() { HistoryManager.redo(); },
+		openNodePopup: openNodePopup,
+		openGroupPopup: openGroupPopup
 	};
 })('ontouchstart' in window || 'onmsgesturechange' in window); // cd1 works on most browsers || cd2 works on IE10/11 and Surface
