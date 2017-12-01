@@ -72,9 +72,12 @@ var dictionary = (function(){
 		document.getElementById('save-as-item').innerHTML = get('SaveAs') + '...';
 		document.getElementById('undo-item').innerHTML = get('Undo') + '<span class="cmd-text">Ctrl+Z</span>';
 		document.getElementById('redo-item').innerHTML = get('Redo') + '<span class="cmd-text">Ctrl+Y</span>';
+		document.getElementById('create-node-item').innerHTML = get('CreateRelative') + '...';
+		document.getElementById('create-group-item').innerHTML = get('CreateGroup') + '...';
 		document.getElementById('delete-item').innerHTML = get('Delete') + '<span class="cmd-text">Ctrl+Del</span></a>';
 		document.getElementById('select-all-item').innerHTML = get('SelectAll') + '<span class="cmd-text">Ctrl+A</span>';
 		document.getElementById('loaded-tree-label').innerHTML = get('LoadedTree');
+		document.getElementById('edit-menu').innerHTML = get('Edit') + '<b class = "caret"></b>';
 		document.getElementById('view-menu').innerHTML = get('View') + '<b class = "caret"></b>';
 		document.getElementById('center-selection-item').innerHTML = get('CenterSelection') + '<span class="cmd-text">S</span>';
 		document.getElementById('extend-item').innerHTML = get('Extend') + '<span class="cmd-text">E</span>';
