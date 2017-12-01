@@ -18,6 +18,32 @@ function onResize(){
 	familyTree.resize(w, h);
 };
 
+function undo(){
+	familyTree.undo();
+};
+
+function redo(){
+	familyTree.redo();
+};
+
+function selectAll(){
+	familyTree.selectAll();
+	familyTree.centerAll();
+};
+
+function deleteElements(){
+	var objects = familyTree.getObjectsToDelete();
+	familyTree.deleteObjects(
+		objects.nodes, 
+		objects.relLinks, 
+		objects.childLinks, 
+		function(){ familyTree.draw(); }, 
+		function(){ familyTree.draw(); }, 
+		function(){ familyTree.draw(); }
+	);
+};
+
+
 if (!isTouchDevice){
 	d3.select(document.body)
 		.on('keydown', function (ev) {		
@@ -53,8 +79,7 @@ if (!isTouchDevice){
 			// delete nodes and/or links
 			else if (d3.event.keyCode == Keys.DELETE) {
 				familyTree.hideContextMenus();
-				var objects = familyTree.getObjectsToDelete();
-		    	familyTree.deleteObjects(objects.nodes, objects.relLinks, objects.childLinks, objects.groups);
+				deleteElements();
 			}
 				
 			else if (d3.event.ctrlKey){
@@ -62,17 +87,16 @@ if (!isTouchDevice){
 				if (d3.event.keyCode == Keys.A) {
 					d3.event.preventDefault();
 					familyTree.hideContextMenus();
-					familyTree.selectAll();
-					familyTree.centerAll();
+					selectAll();
 				} 
 
 				// UNDO
 				else if (d3.event.keyCode == Keys.Z) 
-					familyTree.undo();
+					undo();
 			
 				// REDO
 				else if (d3.event.keyCode == Keys.Y)
-					familyTree.redo();
+					redo();
 			}
 		})
 		.on('onkeyup', function() {
@@ -89,6 +113,8 @@ document.body.onresize = onResize;
 familyTree.init(viewport, document.body.clientWidth, document.body.clientHeight);
 onResize();
 
+var eventType = isTouchDevice ? 'touchstart' : 'click';
+
 var treeNameItem = $('#loaded-tree-name'),
 	alertPopup = $('#alert-popup'),
 	openFilePopup = $('#open-file-popup'),
@@ -96,6 +122,8 @@ var treeNameItem = $('#loaded-tree-name'),
 	fileField = openFilePopup.find('#field-file-name #input-file'),
 	undoMenuItem = $('#undo-item'),
 	redoMenuItem = $('#redo-item'),
+	createNodeMenuItem = $('#create-node-item'),
+	createGroupMenuItem = $('#create-group-item'),
 	deleteMenuItem = $('#delete-item'),
 	seachField = $('#search-field'),
 	fileNameItem = $('#loaded-file-name'),
@@ -106,7 +134,7 @@ $('nav').on('mousedown', function(){
 	familyTree.hideContextMenus();
 });
 
-$('#search-btn').on('click', function(e){
+$('#search-btn').on(eventType, function(e){
 	e.preventDefault();
 	var records = seachField.serializeArray(),
 		values = {};
@@ -120,7 +148,7 @@ saveAsPopup.on("hide.bs.modal", function () {
 });
 
 // create new tree
-$('#new-item').on('click', function(){
+$('#new-item').on(eventType, function(){
 	if (!undoMenuItem.hasClass('disabled')){
 		alertPopup.modal();
 		alertPopup.isLoadingNewTree = true;
@@ -139,7 +167,7 @@ openFilePopup.on("hide.bs.modal", function () {
 	openFilePopup.find("#upload-file-info").val('');
 });
 
-openFilePopup.find('#upload-file-btn').on('click', function(){
+openFilePopup.find('#upload-file-btn').on(eventType, function(){
 	if (fileContent)
 		familyTree.load(JSON.parse(fileContent));
 	openFilePopup.modal('hide');	
@@ -161,12 +189,12 @@ fileField.on('change', function(){
     reader.readAsText(this.files.item(0)); 
 })
 
-alertPopup.find('#yes').on('click', function(){ 
+alertPopup.find('#yes').on(eventType, function(){ 
 	alertPopup.modal('hide');
 	saveAsPopup.modal();
 });
 
-alertPopup.find('#no').on('click', function(){ 
+alertPopup.find('#no').on(eventType, function(){ 
 	alertPopup.modal('hide');
 	if (alertPopup.isLoadingNewTree){
 		alertPopup.isLoadingNewTree = false;
@@ -178,7 +206,7 @@ alertPopup.find('#no').on('click', function(){
 	} 
 });
 
-$('#open-item').on('click', function(){
+$('#open-item').on(eventType, function(){
 	if (!undoMenuItem.hasClass('disabled')){
 		alertPopup.modal();		
 		alertPopup.isOpeningTree = true;
@@ -203,11 +231,11 @@ saveAsPopup.find('.btn-group[data-toggle-name]').each(function () {
     });
 });
 
-$('#save-as-item').on('click', function(){
+$('#save-as-item').on(eventType, function(){
 	saveAsPopup.modal();
 });
 
-$('#save-item').on('click', function(){
+$('#save-item').on(eventType, function(){
 	familyTree.saveAs('json', treeNameItem.html());
 });
 
@@ -220,7 +248,7 @@ saveAsPopup.find("#input-format").on('change', function() {
 		sField.addClass('hide');
 });
 
-saveAsPopup.find('#save').on('click', function(){
+saveAsPopup.find('#save').on(eventType, function(){
 	var form = saveAsPopup.find('.form-horizontal');
 		nodeId = form.find('#input-id').val();
 	if (!form.valid())
@@ -234,7 +262,7 @@ saveAsPopup.find('#save').on('click', function(){
 	familyTree.saveAs(values.format, values.fileName, values.scale);
 
 	saveAsPopup.modal('hide');
-	$('json-format-opt').trigger('click');
+	$('json-format-opt').trigger(eventType);
 	$('#input-name').val('');
 	$('#field-scale').val(100);
 
@@ -248,8 +276,9 @@ saveAsPopup.find('#save').on('click', function(){
 	} 
 });
 
+
 // edit
-$('#edit-menu').on('click', function(){
+$('#edit-menu').on(eventType, function (){
 	var count = familyTree.getSelection().length;
 	if (count)
 		deleteMenuItem.removeClass('disabled');
@@ -257,33 +286,32 @@ $('#edit-menu').on('click', function(){
 		deleteMenuItem.addClass('disabled');
 });
 
-undoMenuItem.on('click', function(){
-	familyTree.undo();
+undoMenuItem.on(eventType, undo);
+
+redoMenuItem.on(eventType, redo);
+
+createNodeMenuItem.on(eventType, function(){
+	familyTree.openNodePopup();
 });
 
-redoMenuItem.on('click', function(){
-	familyTree.redo();
+createGroupMenuItem.on(eventType, function(){
+	familyTree.openGroupPopup();
 });
 
-deleteMenuItem.on('click', function(){
-	var objects = familyTree.getObjectsToDelete();
-	familyTree.deleteObjects(
-		objects.nodes, 
-		objects.relLinks, 
-		objects.childLinks, 
-		function(){ familyTree.draw(); }, 
-		function(){ familyTree.draw(); }, 
-		function(){ familyTree.draw(); }
-	);
-})
+deleteMenuItem.on(eventType, deleteElements);
 
-$('#select-all-item').on('click', function(){
-	familyTree.selectAll();
-	familyTree.centerAll();
-});
+$('#select-all-item').on(eventType, selectAll);
+
+if (!isTouchDevice){	
+	createNodeMenuItem.addClass('hide');
+	createGroupMenuItem.addClass('hide');
+} else {
+	createNodeMenuItem.removeClass('hide');
+	createGroupMenuItem.removeClass('hide');
+}
 
 //view
-$('#view-menu').on('click', function(){
+$('#view-menu').on(eventType, function(){
 	var count = familyTree.getSelection().length;
 	if (count)
 		centerSelItem.removeClass('disabled');
@@ -291,11 +319,11 @@ $('#view-menu').on('click', function(){
 		centerSelItem.addClass('disabled');
 });
 
-centerSelItem.on('click', function(){
+centerSelItem.on(eventType, function(){
 	familyTree.centerSelection();
 });
 
-extendItem.on('click', function(){
+extendItem.on(eventType, function(){
 	familyTree.centerAll();
 });
 
@@ -303,7 +331,7 @@ extendItem.on('click', function(){
 var langMenu = $('#language-menu');
 	
 langMenu.parent().find('li').each(function(){
-	$(this).find('a').on('click', function(){
+	$(this).find('a').on(eventType, function(){
 		langMenu.parent().find('li.active').removeClass('active');
 		var $a = $(this);
 		$a.parent().addClass('active');
@@ -313,7 +341,7 @@ langMenu.parent().find('li').each(function(){
  	});
 });	
 
-$(document).on('click', '#main-navbar-collapse', function(e) {
+$(document).on(eventType, '#main-navbar-collapse', function(e) {
 	var $target = $(e.target);
     if($target.is('a') && $target.attr('class') != 'dropdown-toggle' )
     	$(this).collapse('hide');
