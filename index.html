@@ -1,22 +1,23 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
 		<title>Family Tree</title>
 		<script src="js/lib/jquery.min.js" type="text/javascript"></script>
 		<script type="text/javascript" src="js/lib/jquery.validate.js"></script>
 
 		<script charset="utf-8" src="js/lib/d3.v3.min.js" type="text/javascript"></script>
-		
+
 		<script src="js/lib/bootstrap.min.js" type="text/javascript"></script>
 		<link rel="stylesheet" href="styles/bootstrap.min.css">
+		<link rel="stylesheet" href="styles/font-awesome-4.7.0/css/font-awesome.min.css">
 
 		<script src="js/lib/tether.min.js" type="text/javascript"></script>
 		
 		<link rel="stylesheet" href="styles/main.css">
 		<style id="less:concepts-less-css-style" media="screen" type="text/css">
 			#viewport {
-			  height: auto;
+			  height: 100%;
 			  padding-right: 0px;
 			  padding-left: 0px;
 			  background-color: #555;
@@ -115,6 +116,14 @@
 			.selected .group-textarea .background{
 			  stroke: #4cb3f4;
 			}
+			.open-context-menu rect{
+				stroke-width: 0px;
+				fill: transparent;
+			}
+			.open-context-menu circle{
+				stroke-width: 0px;
+				fill: #333;
+			}
 		</style>
 
 		<script src="js/familyTreeUtil.js" type="text/javascript"></script>
@@ -140,10 +149,25 @@
 					<li class = "dropdown">
 						<a href = "#" class = "dropdown-toggle" data-toggle = "dropdown" id="file-menu">File<b class = "caret"></b></a>
 						<ul class = "dropdown-menu">
-							<li><a href = "#" id="new-item">New</a></li>
-							<li><a href = "#" id="open-item">Open...</a></li>
+							<li>
+								<a href = "#" id="new-item">
+									<i class="glyphicon fa fa-file"></i>
+									<span class="item-text">New</span>
+								</a>
+							</li>
+							<li>
+								<a href = "#" id="open-item">
+									<span class="glyphicon glyphicon-folder-open"></span>
+									<span class="item-text">Open</span>...
+								</a>
+							</li>
 							<li class = "divider"></li>
-							<li><a href = "#" id="save-as-item">Save as...</a></li>
+							<li>
+								<a href = "#" id="save-as-item">
+									<span class="glyphicon glyphicon-save-file"></span>
+									<span class="item-text">Save as</span>...
+								</a>
+							</li>
 						</ul>
 					</li>
 					<li class = "dropdown">
@@ -151,23 +175,27 @@
 						<ul class = "dropdown-menu">
 							<li><a href = "#" id="undo-item" class="disabled">
 								<span class="cmd-text">Ctrl+Z</span>
-								<span style="display: inline-block;">Undo</span>
+								<i class="glyphicon fa fa-undo"></i>
+								<span class="item-text">Undo</span>
 							</a></li>
 							<li><a href = "#" id="redo-item" class="disabled">
 								<span class="cmd-text">Ctrl+Y</span>
-								<span style="display: inline-block;">Redo</span>
+								<i class="glyphicon fa fa-repeat"></i>
+								<span class="item-text">Redo</span>
 							</a></li>
 							<li class = "divider"></li>
 							<li><a href = "#" id="delete-item" class="disabled">
 								<span class="cmd-text">Del</span>
-								<span style="display: inline-block;">Delete</span>
+								<span class="glyphicon glyphicon-trash"></span>
+								<span class="item-text">Delete</span>
 							</a></li>
-							<li><a href="#" id="create-node-item">Create relative...</a></li>
-							<li><a href="#" id="create-group-item">Create group...</a></li>
 							<li class = "divider"></li>
 							<li><a href = "#" id="select-all-item">
 								<span class="cmd-text">Ctrl+A</span>
-								<span style="display: inline-block;">Select all</span>
+								<span class="item-text">Select all</span>
+							</a></li>
+							<li><a href = "#" id="selection-area-item">
+								<span class="item-text">Select area</span>
 							</a></li>
 							<!--<li class = "divider"></li>
 							<li><a href = "#" id="add-to-group">Add to group</a></li>-->
@@ -178,11 +206,13 @@
 						<ul class = "dropdown-menu">
 							<li><a href="#" class="disabled" id="center-selection-item">
 								<span class="cmd-text">S</span>
-								<span style="display: inline-block;">Center selection</span>
+								<i class="glyphicon fa fa-bullseye"></i>
+								<span class="item-text">Center selection</span>
 							</a></li>
 							<li><a href="#" id="extend-item">
 								<span class="cmd-text">E</span>
-								<span style="display: inline-block;">Extend</span>
+								<span class="glyphicon glyphicon-fullscreen"></span>
+								<span class="item-text">Extend</span>
 							</a></li>
 						</ul>
 					</li>
@@ -430,8 +460,18 @@
 		</div>
 		<div id="bgContextMenu" class="dropdown clearfix">
 			<ul class="dropdown-menu" role="menu" style="display:block;position:static;margin-bottom:5px;">
-				<li><a tabindex="-1" href="#" id="create-node">Create relative...</a></li>
-				<li><a tabindex="-1" href="#" id="create-group">Create group...</a></li>
+				<li>
+					<a tabindex="-1" href="#" id="create-node">
+						<i class="glyphicon fa fa-user-plus"></i>
+						<span class="item-text">Create relative</span>...
+					</a>
+				</li>
+				<li>
+					<a tabindex="-1" href="#" id="create-group">
+						<i class="glyphicon fa fa-users"></i>
+						<span class="item-text">Create group</span>...
+					</a>
+				</li>
 				<li class="divider"></li>
 				<li><a tabindex="-1" href="#" id="select-all">
 					<span class="cmd-text">Ctrl+A</span>
@@ -443,36 +483,48 @@
 			<ul class="dropdown-menu" role="menu" style="display:block;position:static;margin-bottom:5px;">
 				<li><a tabindex="-1" href="#" id="selection" class="disabled"></a></li>
 				<li class="divider"></li>
-				<li><a tabindex="-1" href="#" id="edit-node">Edit...</a></li>
+				<li>
+					<a tabindex="-1" href="#" id="edit-node">
+						<span class="glyphicon glyphicon-pencil"></span>
+						<span class="item-text">Edit</span>...
+					</a>
+				</li>
 				<li class="divider"></li>
-				<li><a tabindex="-1" href="#" id="delete">
-					<span class="cmd-text">Del</span>
-					<span style="display: inline-block;">Delete</span>
-				</a></li>
+				<li>
+					<a tabindex="-1" href="#" id="delete">
+						<span class="cmd-text">Del</span>
+						<span class="glyphicon glyphicon-trash"></span>
+						<span class="item-text">Delete</span>
+					</a>
+				</li>
 				<li class="divider"></li>
-				<li><a tabindex="-1" href="#" id="center-selection">
-					<span class="cmd-text">S</span>
-					<span style="display: inline-block;">Center selection</span>
-				</a></li>
+				<li>
+					<a tabindex="-1" href="#" id="center-selection">
+						<span class="cmd-text">S</span>
+						<i class="glyphicon fa fa-bullseye"></i>
+						<span class="item-text">Center selection</span>
+					</a>
+				</li>
 				<li><a tabindex="-1" href="#" id="center-all">
 					<span class="cmd-text">E</span>
-					<span style="display: inline-block;">Extend</span>
+					<span class="glyphicon glyphicon-fullscreen"></span>
+					<span class="item-text">Extend</span>
 				</a></li>
 				<li class="divider"></li>
 				<li><a tabindex="-1" href="#" id="link-to-partner">Link to partner</a></li>
 				<li class="dropdown-submenu">
 					<a tabindex="-1" href="#" id="add-to-group">
 						<span class="cmd-text caret-right"></span>
-						<span style="display: inline-block;">Add to group</span>
+						<span class="item-text">Add to group</span>
 					</a>
 					<ul class="dropdown-menu">
-						<li ><a href="#" id="add-to-new-group">New group...</a></li>
+						<li ><a href="#" id="add-to-new-group"><span class="item-text">New group</span>...</a></li>
 					</ul>
 				</li>
 				<li class="dropdown-submenu">
 					<a tabindex="-1" href="#" id="remove-from-group">
 						<span class="cmd-text caret-right"></span>
-						<span style="display: inline-block;">Remove from group</span>
+						<span class="item-text">Remove from group</span>
 					</a>
 					<ul class="dropdown-menu">
 					</ul>
@@ -483,20 +535,31 @@
 			<ul class="dropdown-menu" role="menu" style="display:block;position:static;margin-bottom:5px;">
 				<li><a tabindex="-1" href="#" id="selection" class="disabled"></a></li>
 				<li class="divider"></li>
-				<li><a tabindex="-1" href="#" id="edit-group">Edit...</a></li>
+				<li><a tabindex="-1" href="#" id="edit-group">
+						<span class="glyphicon glyphicon-pencil"></span>
+						<span class="item-text">Edit</span>...
+					</a>
+				</li>
 				<li class="divider"></li>
-				<li><a tabindex="-1" href="#" id="delete">
-					<span class="cmd-text">Del</span>
-					<span style="display: inline-block;">Delete</span>
-				</a></li>
+				<li>
+					<a tabindex="-1" href="#" id="delete">
+						<span class="cmd-text">Del</span>
+						<span class="glyphicon glyphicon-trash"></span>
+						<span class="item-text">Delete</span>
+					</a>
+				</li>
 				<li class="divider"></li>
-				<li><a tabindex="-1" href="#" id="center-selection">
-					<span class="cmd-text">S</span>
-					<span style="display: inline-block;">Center selection</span>
-				</a></li>
+				<li>
+					<a tabindex="-1" href="#" id="center-selection">
+						<span class="cmd-text">S</span>
+						<i class="glyphicon fa fa-bullseye"></i>
+						<span class="item-text">Center selection</span>
+					</a>
+				</li>
 				<li><a tabindex="-1" href="#" id="center-all">
 					<span class="cmd-text">E</span>
-					<span style="display: inline-block;">Extend</span>
+					<span class="glyphicon glyphicon-fullscreen"></span>
+					<span class="item-text">Extend</span>
 				</a></li>
 			</ul>
 		</div>	
