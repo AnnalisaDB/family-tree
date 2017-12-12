@@ -12,6 +12,7 @@ var dictionary = (function(){
 		'Delete': {eng: 'Delete', ita: 'Elimina'},
 		'Description': {eng: 'Description', ita: 'Descrizione'},
 		'Edit': {eng: 'Edit', ita: 'Modifica'},
+		'EditSelected': {eng: 'Edit selected', ita: 'Modifica selezionato'},
 		'Extend': {eng: 'Extend', ita: 'Mostra tutto'},
 		'Extension': {eng: 'Extension', ita: 'Formato'},
 		'FileName': {eng: 'File name', ita: 'Nome file'},
@@ -22,6 +23,7 @@ var dictionary = (function(){
 		'LinkToPartner': {eng: 'Link to partner', ita: 'Collega al partner'},
 		'LoadedTree': {eng: 'Loaded tree', ita: 'Albero caricato'},
 		'ModifiedTreeAlert': { eng: 'Current tree has been modified. Do you want save changes?', ita: 'L\'albero corrente è stato modificato. Vuoi salvare le modifiche prima di continuare?'},
+		'MultiSelection': { eng: 'Multi selection', ita: 'Selezione multipla'},
 		'Name': { eng: 'Name', ita: 'Nome'},
 		'NewGroup': { eng: 'New group', ita: 'Nuovo gruppo'},
 		'NewTree': { eng: 'New', ita: 'Nuovo'},
@@ -34,6 +36,7 @@ var dictionary = (function(){
 		'SaveAs': { eng: 'Save as', ita: 'Salva come'},
 		'Scale': { eng: 'Scale', ita: 'Scala'},
 		'SelectAll': { eng: 'Select all', ita: 'Seleziona tutto' },
+		'SelectArea': {eng: 'Select area', ita: 'Area di Selezione'},
 		'selectedItems': { eng: 'selected items', ita: 'elementi selezionati' },
 		'Sex': { eng: 'Sex', ita: 'Sesso' },
 		'Surname': { eng: 'Surname', ita: 'Cognome' },
@@ -67,20 +70,19 @@ var dictionary = (function(){
 	};
 
 	function updateNavBar(){
-		document.getElementById('new-item').innerHTML = get('NewTree');
-		document.getElementById('open-item').innerHTML = get('Open') + '...';
-		document.getElementById('save-as-item').innerHTML = get('SaveAs') + '...';
-		document.getElementById('undo-item').innerHTML = get('Undo') + '<span class="cmd-text">Ctrl+Z</span>';
-		document.getElementById('redo-item').innerHTML = get('Redo') + '<span class="cmd-text">Ctrl+Y</span>';
-		document.getElementById('create-node-item').innerHTML = get('CreateRelative') + '...';
-		document.getElementById('create-group-item').innerHTML = get('CreateGroup') + '...';
-		document.getElementById('delete-item').innerHTML = get('Delete') + '<span class="cmd-text">Ctrl+Del</span></a>';
-		document.getElementById('select-all-item').innerHTML = get('SelectAll') + '<span class="cmd-text">Ctrl+A</span>';
-		document.getElementById('loaded-tree-label').innerHTML = get('LoadedTree');
-		document.getElementById('edit-menu').innerHTML = get('Edit') + '<b class = "caret"></b>';
-		document.getElementById('view-menu').innerHTML = get('View') + '<b class = "caret"></b>';
-		document.getElementById('center-selection-item').innerHTML = get('CenterSelection') + '<span class="cmd-text">S</span>';
-		document.getElementById('extend-item').innerHTML = get('Extend') + '<span class="cmd-text">E</span>';
+		$('#new-item span.item-text').html(get('NewTree'));
+		$('#open-item span.item-text').html(get('Open'));
+		$('#save-as-item span.item-text').html(get('SaveAs'));
+		$('#undo-item span.item-text').html(get('Undo'));
+		$('#redo-item span.item-text').html(get('Redo'));
+		$('#delete-item span.item-text').html(get('Delete'));
+		$('#select-all-item span.item-text').html(get('SelectAll'));
+		$('#selection-area-item span.item-text').html(get('SelectArea'));	
+		$('#loaded-tree-label span.item-text').html(get('LoadedTree'));
+		$('#edit-menu span.item-text').html(get('Edit'));
+		$('#view-menu span.item-text').html(get('View'));
+		$('#center-selection-item span.item-text').html(get('CenterSelection'));
+		$('#extend-item span.item-text').html(get('Extend'));
 	};
 
 	function updatePopups(){
@@ -124,25 +126,25 @@ var dictionary = (function(){
 		$openTreePopup.find('.modal-footer #cancel').html(get('Cancel') );
 
 		var $bgContextMenu = $('#bgContextMenu');
-		$bgContextMenu.find('#create-node').html(get('CreateRelative') + '...');
-		$bgContextMenu.find('#create-group').html(get('CreateGroup') + '...');
+		$bgContextMenu.find('#create-node span.item-text').html(get('CreateRelative'));
+		$bgContextMenu.find('#create-group span.item-text').html(get('CreateGroup'));
 		$bgContextMenu.find('#select-all').html(get('SelectAll') + '<span class="cmd-text">Ctrl+A</span>');
 
 		var $nodeContextMenu = $('#nodeContextMenu');
-		$nodeContextMenu.find('#edit-node').html(get('Edit') + '...');
-		$nodeContextMenu.find('#delete').html(get('Delete') + '<span class="cmd-text">Ctrl+Del</span>');
-		$nodeContextMenu.find('#center-selection').html(get('CenterSelection') + '<span class="cmd-text">S</span>');
-		$nodeContextMenu.find('#center-all').html(get('Extend') + '<span class="cmd-text">E</span>');
+		$nodeContextMenu.find('#edit-node span.item-text').html(get('Edit'));
+		$nodeContextMenu.find('#delete span.item-text').html(get('Delete'));
+		$nodeContextMenu.find('#center-selection span.item-text').html(get('CenterSelection'));
+		$nodeContextMenu.find('#center-all span.item-text').html(get('Extend'));
 		$nodeContextMenu.find('#link-to-partner').html(get('LinkToPartner'));
-		$nodeContextMenu.find('#remove-from-group').html(get('RemoveFromGroup'));
-		$nodeContextMenu.find('#add-to-group').html(get('AddToGroup') + '<span class="cmd-text caret-right">');
-		$nodeContextMenu.find('#add-to-new-group').html(get('NewGroup') + '...');
+		$nodeContextMenu.find('#remove-from-group span.item-text').html(get('RemoveFromGroup'));
+		$nodeContextMenu.find('#add-to-group span.item-text').html(get('AddToGroup'));
+		$nodeContextMenu.find('#add-to-new-group span.item-text').html(get('NewGroup'));
 
 		var $groupContextMenu = $('#groupContextMenu');
-		$groupContextMenu.find('#edit-group').html(get('Edit') + '...');
-		$groupContextMenu.find('#delete').html(get('Delete') + '<span class="cmd-text">Ctrl+Del</span>');
-		$groupContextMenu.find('#center-selection').html(get('CenterSelection') + '<span class="cmd-text">S</span>');
-		$groupContextMenu.find('#center-all').html(get('Extend') + '<span class="cmd-text">E</span>');
+		$groupContextMenu.find('#edit-group span.item-text').html(get('Edit'));
+		$groupContextMenu.find('#delete span.item-text').html(get('Delete'));
+		$groupContextMenu.find('#center-selection span.item-text').html(get('CenterSelection'));
+		$groupContextMenu.find('#center-all span.item-text').html(get('Extend'));
 	};
 
 	return { 
