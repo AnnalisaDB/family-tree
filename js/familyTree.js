@@ -1,5 +1,4 @@
 var familyTree = (function (isTouchDevice){
-		
 	var dataNodes = [];
 	var dataRelLinks = [];
 	var dataChildLinks = [];
@@ -32,6 +31,7 @@ var familyTree = (function (isTouchDevice){
 		resizersSide = 8,
 		groupColor = '#85e1e1',
 		groupPadding = 10,
+		maxScale = isTouchDevice ? 0.8 : 1,
 		currentScale, xScale, yScale, zoom,
 		brush, brushLayer,
 		isCreatingRel = null,
@@ -41,6 +41,9 @@ var familyTree = (function (isTouchDevice){
 		relLinkOver = null,
 		tmpRelLink, tmpChildLink, tmpNode, tmpFromNode, tmpToNode, tmpGroup,
 		isResizingGroup = null;
+	
+	var dotRadius = 3,
+		isMultiSelection = false;
 	
 	var HistoryManager = actionHistory();
 	var TooltipManager = tooltipManager();
@@ -135,8 +138,10 @@ var familyTree = (function (isTouchDevice){
 		if (!svg || svg.empty())
 			return;
 		
-        var w = parseInt(svg.attr('width')),
-            h = parseInt(svg.attr('height'));
+		var w = parseInt(svg.attr('width')),
+            h = parseInt(svg.attr('height')),
+            t = d3.event.translate, 
+            s = d3.event.scale;
 
         if (dataNodes.length) {
             var canvasInfo = _getViewport(dataNodes, dataGroups);
@@ -291,7 +296,9 @@ var familyTree = (function (isTouchDevice){
 				lastEl.before(li);
 			});
 			lastEl.before('<li class="divider"></li>');
-			menu.on('click', '.existing-group a', function(){
+
+			var eventStart = isTouchDevice ? 'touchstart' : 'click';
+			menu.on(eventStart, '.existing-group a', function(){
 				var el = this,
 					$el = $(this),
 					id = $el.attr('id').substring(22);
@@ -355,16 +362,23 @@ var familyTree = (function (isTouchDevice){
     	if (!nodes || nodes.empty())
     		return nodes;
 
- /*		if (isTouchDevice){
-			console.log('to do');
-			return;
-		}
-*/		
-		
+    	// touch events
+    	function onTouchStartNode(node){
+    		if (node.selected){
+	    		if (isMultiSelection)
+	    			deselectNode(node);
+	    	} else {
+	    		if (!isMultiSelection) 
+	    			deselectAll();
+	    		selectNode(node);
+	    	}
+    	};
+
+		// mouse events
 		function onMouseOverNode(node){
 			var d3Node = d3.select(this);
-
-			// It is creating a new relationship
+			
+			// It is creating a new "relationship" link
 			if (isCreatingRel == 'right' && !d3Node.classed('rel-from')){ // changing toNode
 				var fromNode = d3.select('.rel-from').datum();
 				if (!util.tree.haveRelationship(node.id, fromNode.id, dataRelLinks))
@@ -437,35 +451,38 @@ var familyTree = (function (isTouchDevice){
 		};
 
 		function onMouseDownNode(node) {
-			CtxMenuManager.hide();
-			if (node.selected) { // multiple selection
-				if (d3.event.ctrlKey)
-					deselectNode(node);
-			} else {
-				if (!d3.event.ctrlKey) // single selection
-					deselectAll();
-				selectNode(node);
-			}
-		};
+	    	CtxMenuManager.hide();
+	    	var isCtrlKeyDown = event.ctrlKey;
 
-		function onClickNode(node) {
-			if (!d3.event.ctrlKey) {
-				deselectAll();
-				selectNode(node);
-			}
-		};
-		
-/*		if (isTouchDevice){
-			console.log('to do');
-			return;
+	    	if (node.selected){
+	    		if (isCtrlKeyDown)
+	    			deselectNode(node);
+	    	} else {
+	    		if (!isCtrlKeyDown) // single selection
+	    			deselectAll();
+	    		selectNode(node);
+	    	}
+	    };
+
+ 		if (isTouchDevice){	
+ 			nodes
+ 				.on('touchstart', onTouchStartNode);
+ 		} else {
+			nodes
+		    	.on('mouseover', onMouseOverNode)
+				.on('mouseout', onMouseOutNode)
+				.on('mousedown', onMouseDownNode);
+
+			nodes.selectAll('.partner-port')
+				.call(
+					d3.behavior.drag()
+	                    .on('dragstart', onStartRelLink)
+	                    .on('drag', onMoveRelLink)
+	                    .on('dragend', onEndRelLink)
+	            );
 		}
-*/
-		nodes.on('mouseover', onMouseOverNode)
-			.on('mouseout', onMouseOutNode)
-			.on('mousedown', onMouseDownNode)
-			.on('click', onClickNode );
-
-		CtxMenuManager.onRightClick('node', nodes, svg, {
+			
+		CtxMenuManager.onRightClick('node', isTouchDevice ? nodes.selectAll('.open-context-menu') : nodes, svg, {
 			getSelectionCount: function(){
 				var count = dataNodes.filter(function(n){return n.selected;}).length;
 					count += dataRelLinks.filter(function(n){return n.selected;}).length;
@@ -479,21 +496,13 @@ var familyTree = (function (isTouchDevice){
 				_updateRemoveFromGroupsItem();
 			}
 		});
-				
+
 		nodes.call(
 			d3.behavior.drag()
 				.on('dragstart', onStartToMoveNodes)
 				.on('drag', onMovingNodes)
 				.on('dragend', onFinishToMoveNodes)
 		);
-		
-		nodes.selectAll('.partner-port')
-			.call(
-				d3.behavior.drag()
-                    .on('dragstart', onStartRelLink)
-                    .on('drag', onMoveRelLink)
-                    .on('dragend', onEndRelLink)
-            );
 
 		return nodes;
     };	
@@ -591,6 +600,31 @@ var familyTree = (function (isTouchDevice){
 				points: nodeWidth + ',' + (0.5 * nodeHeight - 5) + ' ' + (nodeWidth + 5) +',' + (0.5 * nodeHeight)
 							+ ' ' + nodeWidth + ',' + (0.5 * nodeHeight + 5) + ' ' + (nodeWidth - 5) + ',' + (0.5 * nodeHeight)
 			});
+
+		if (isTouchDevice){
+			var openNodeCtxMenuDots = newNodes.append('g')
+				.attr({
+					'class': 'open-context-menu',
+					transform: 'translate('+ (nodeWidth - 2 * dotRadius) + ', 0)'
+				});
+			openNodeCtxMenuDots.append('rect').attr({
+				x: - 2 * dotRadius,
+				width: 4 * dotRadius,
+				height: 10 * dotRadius
+			});
+			openNodeCtxMenuDots.append('circle').attr({
+				cy: 2 * dotRadius,
+				r: dotRadius
+			});
+			openNodeCtxMenuDots.append('circle').attr({
+				cy: 5 * dotRadius,
+				r: dotRadius
+			});
+			openNodeCtxMenuDots.append('circle').attr({
+				cy: 8 * dotRadius,
+				r: dotRadius
+			});
+		}
 
 		_updateD3Nodes(newNodes, true);
 
@@ -731,13 +765,25 @@ var familyTree = (function (isTouchDevice){
     	if (!groups || groups.empty())
     		return groups;
 
-    	/*		if (isTouchDevice){
-			console.log('to do');
-			return;
-		}
-*/
 		var textarea = groups.selectAll('.group-textarea');
 
+		// touch events
+    	function onTouchStartGroup(g) {
+			// select it if not
+			if (!g.selected){
+				deselectAll();
+				selectGroup(g);
+			}
+/*
+			// disable zoom event if it is a single touch
+			if (d3.event.touches.length == 1)
+				svg.selectAll('.groups').on('touchmove.zoom', null);*/
+		};
+
+		function onTouchEndGroup(g) {	
+		};
+
+		// mouse events
 		function onMouseOverGroup(g){
         	groupOver = g;
 
@@ -776,29 +822,45 @@ var familyTree = (function (isTouchDevice){
 			}
 		};
 
-		// Add event listeners
-		CtxMenuManager.onRightClick('group', textarea, svg, { 
-			getSelectionCount: function(){
-				var count = dataNodes.filter(function(n){return n.selected;}).length;
-					count += dataRelLinks.filter(function(n){return n.selected;}).length;
-					count += dataChildLinks.filter(function(n){return n.selected;}).length;
-					count += dataGroups.filter(function(n){return n.selected;}).length;
-				return count;
-			}
-		});
+	/*	if (isTouchDevice){
+			textarea
+	            .on('touchstart', onTouchStartGroup)
+				.on('touchend', onTouchEndGroup);
 
-        textarea
-            .on('mousedown', onMouseDownGroup)
-			.on('click', onClickGroup)
-            .on('mouseover', onMouseOverGroup)
-            .on('mouseout', onMouseOutGroup)
-            .call(
-            	d3.behavior.drag()
-		            .on('dragstart', onStartToMoveGroups)
-		            .on('drag', onMovingGroups)
-		            .on('dragend', onFinishToMoveGroups)
-	        );
+			CtxMenuManager.onRightClick('group', textarea.select('.open-context-menu'), svg, {
+				getSelectionCount: function(){
+					var count = dataNodes.filter(function(n){return n.selected;}).length;
+						count += dataRelLinks.filter(function(n){return n.selected;}).length;
+						count += dataChildLinks.filter(function(n){return n.selected;}).length;
+						count += dataGroups.filter(function(n){return n.selected;}).length;
+					return count;
+				}
+			});
+		} else {
+	*/		// Add event listeners
+			CtxMenuManager.onRightClick('group', textarea, svg, { 
+				getSelectionCount: function(){
+					var count = dataNodes.filter(function(n){return n.selected;}).length;
+						count += dataRelLinks.filter(function(n){return n.selected;}).length;
+						count += dataChildLinks.filter(function(n){return n.selected;}).length;
+						count += dataGroups.filter(function(n){return n.selected;}).length;
+					return count;
+				}
+			});
 
+	        textarea
+	            .on('mousedown', onMouseDownGroup)
+				.on('click', onClickGroup)
+	            .on('mouseover', onMouseOverGroup)
+	            .on('mouseout', onMouseOutGroup);
+      //  }
+
+        textarea.call(
+        	d3.behavior.drag()
+	            .on('dragstart', onStartToMoveGroups)
+	            .on('drag', onMovingGroups)
+	            .on('dragend', onFinishToMoveGroups)
+        );
 		return groups;
     };	   
 	
@@ -837,11 +899,28 @@ var familyTree = (function (isTouchDevice){
 			.attr('width', resizersSide)
         	.attr('height', resizersSide);
 
-/*		if (isTouchDevice){
-			console.log('to do');
-			return;
+    	if (isTouchDevice){
+			var openGroupCtxMenuDots = textarea.append('g')
+				.attr('class', 'open-context-menu');
+			openGroupCtxMenuDots.append('rect').attr({
+				x: - 2 * dotRadius,
+				width: 4 * dotRadius,
+				height: 10 * dotRadius
+			});
+			openGroupCtxMenuDots.append('circle').attr({
+				cy: 2 * dotRadius,
+				r: dotRadius
+			});
+			openGroupCtxMenuDots.append('circle').attr({
+				cy: 5 * dotRadius,
+				r: dotRadius
+			});
+			openGroupCtxMenuDots.append('circle').attr({
+				cy: 8 * dotRadius,
+				r: dotRadius
+			});
 		}
-*/
+
 		if (addEventsCallback)
 			groups = addEventsCallback(groups);
 
@@ -1026,6 +1105,10 @@ var familyTree = (function (isTouchDevice){
         	.attr('y', h - resizersSide)
         	.attr('fill', util.color.invert(color));
 
+    	var openGroupCtxMenuDots = d3selection.select('.open-context-menu');
+    	if (!openGroupCtxMenuDots.empty())
+    		openGroupCtxMenuDots.attr('transform', 'translate('+ (w - 2 * dotRadius) + ', 0)');
+    				
     	d3selection.select('.group-textarea').attr('transform', 'translate(' + p[0] + ',' + p[1] +')');
 	};
 
@@ -1049,11 +1132,10 @@ var familyTree = (function (isTouchDevice){
 		if (!links || links.empty())
 			return; 
 
-		/*		if (isTouchDevice){
+		if (isTouchDevice){
 			console.log('to do');
 			return;
 		}
-*/		
 
 		function onMouseOverLink(link){
 			relLinkOver = link;
@@ -1186,11 +1268,10 @@ var familyTree = (function (isTouchDevice){
 		if (!links || links.empty())
 			return; 
 
-		/*		if (isTouchDevice){
+		if (isTouchDevice){
 			console.log('to do');
 			return;
 		}
-*/		
 		
 		function onMouseDownLink(link){
 			CtxMenuManager.hide();
@@ -1441,7 +1522,7 @@ var familyTree = (function (isTouchDevice){
 						el = el.parentNode;
 					if (el)
 						$(el).hide();
-					CtxMenuManager.getContextMenu('node').hide();
+					//CtxMenuManager.getContextMenu('node').hide();
 					var group = getGroupById(id),
 						nodesToRemove = dataNodes.filter(function(n){return n.selected == true && group.nodes.indexOf(n.id) != -1;});
 					removeNodesFrom(nodesToRemove, group);
@@ -1485,7 +1566,7 @@ var familyTree = (function (isTouchDevice){
             var d3Node = getD3Node(node);
             if (d3Node){
             	d3Node.classed('selected', true);
-            	 d3Node.selectAll('.partner-port').classed('hide', nodeOver != node);	
+            	d3Node.selectAll('.partner-port').classed('hide', nodeOver != node);	
             }           
             return true;
         });
@@ -1594,16 +1675,14 @@ var familyTree = (function (isTouchDevice){
 			return;
 		}
 
+		d3.event.sourceEvent.stopPropagation();
         var selection = dataGroups.filter(function(group){return group.selected;});
         selection.forEach(function (group) {
             group.lastX = group.x;
             group.lastY = group.y;
         });
-/*        if (isTouchDevice){
-        	console.log('to do')
-        	return
-        }
-*/        posB4Drag = d3.mouse(svg.node());
+
+        posB4Drag = isTouchDevice ? d3.touch(svg.node()) : d3.mouse(svg.node());
     };
 	
     function onMovingGroups (group) {
@@ -1611,7 +1690,8 @@ var familyTree = (function (isTouchDevice){
     		onResizingGroup(group);
 			return;
     	}
-        var posOnDrag = (isTouchDevice) ? [NaN, NaN] : d3.mouse(svg.node());
+        var posOnDrag = isTouchDevice ? d3.touch(svg.node()) : d3.mouse(svg.node());
+        
         if (posB4Drag && (Math.abs(posOnDrag[0] - posB4Drag[0]) < 5 && Math.abs(posOnDrag[1] - posB4Drag[1]) < 5))
             return;
         posB4Drag = null;
@@ -1666,20 +1746,18 @@ var familyTree = (function (isTouchDevice){
     };
 	
 	function onStartToMoveNodes (node) {
+		d3.event.sourceEvent.stopPropagation();
         var selection = dataNodes.filter(function(n){return n.selected;});
         selection.forEach(function (n) {
             n.lastX = n.x;
             n.lastY = n.y;
         });
-/*        if (isTouchDevice){
-        	console.log('to do')
-        	return
-        }
-*/        posB4Drag = d3.mouse(svg.node());
+        posB4Drag = isTouchDevice ? d3.touch(svg.node()) : d3.mouse(svg.node());
     };
 	
     function onMovingNodes () {
-        var posOnDrag = (isTouchDevice) ? [NaN, NaN] : d3.mouse(svg.node());
+    	d3.event.sourceEvent.stopPropagation();
+    	var posOnDrag = isTouchDevice ? d3.touch(svg.node()) : d3.mouse(svg.node());
         if (posB4Drag && (Math.abs(posOnDrag[0] - posB4Drag[0]) < 5 && Math.abs(posOnDrag[1] - posB4Drag[1]) < 5))
             return;
         posB4Drag = null;
@@ -1713,6 +1791,7 @@ var familyTree = (function (isTouchDevice){
 
     
     function onFinishToMoveNodes() {
+    	d3.event.sourceEvent.stopPropagation();
         posB4Drag = null;
         var nodes = dataNodes.filter(function(n){return n.selected;}).concat(); // clone array of moved nodes
         if (!nodes.length)
@@ -1784,6 +1863,7 @@ var familyTree = (function (isTouchDevice){
 	function onStartRelLink(node){
 		if (!svg || svg.empty())
             return;
+        d3.event.sourceEvent.stopPropagation();
 		var pos = (isTouchDevice) ? [NaN, NaN] : d3.mouse(svg.node());
 		pos[0] = xScale.invert(pos[0]);
 		pos[1] = yScale.invert(pos[1]) - nodeHeight * 0.5;
@@ -1893,6 +1973,8 @@ var familyTree = (function (isTouchDevice){
     function onStartChildLink(relLink){
 		if (!svg || svg.empty())
             return;
+
+        d3.event.sourceEvent.stopPropagation();
 
         var pos = (isTouchDevice) ? [NaN, NaN] : d3.mouse(svg.node());
 		pos[0] = xScale.invert(pos[0]);
@@ -2267,7 +2349,6 @@ var familyTree = (function (isTouchDevice){
 				text: group.text
     		}
     	};
-
     	dataGroups.push(group);
 
     	var groupsList = [];
@@ -2306,7 +2387,7 @@ var familyTree = (function (isTouchDevice){
 					el = el.parentNode;
 				if (el)
 					$(el).hide();
-				CtxMenuManager.getContextMenu('node').hide();
+				//CtxMenuManager.getContextMenu('node').hide();
 				var g = getGroupById(id),
 					nodesToAdd = dataNodes.filter(function(n){return n.selected == true && g.nodes.indexOf(n.id) == -1;});
 				addNodesTo(nodesToAdd, g);
@@ -2858,88 +2939,112 @@ var familyTree = (function (isTouchDevice){
 		
 		xScale = d3.scale.linear().domain([0, w]).range([0, w]);
 		yScale = d3.scale.linear().domain([0, h]).range([0, h]);
-		zoom = d3.behavior.zoom().on('zoom', function () { _onZoom(); }).x(xScale).y(yScale);
-		currentScale = 1;
-
+		zoom = d3.behavior.zoom().on('zoom', _onZoom).x(xScale).y(yScale);
+		zoom.scale(maxScale).scaleExtent([0, maxScale]);
+        currentScale = maxScale;
+    	
 		var panArea = svg.append('svg:rect').attr('class', 'zoom-pan-area')
 			.attr('width', w)
 			.attr('height', h)
-			.call(zoom);
+			.call(zoom)
+			.on('dblclick.zoom', null);
 		
-		panArea
-			.on('dblclick.zoom', null)
-			.on('touchstart', function () {
+		if (isTouchDevice){
+			panArea.on('touchstart', function () {
 				CtxMenuManager.hide();
-				deselectAll();
-			})
-			.on('mousedown', function () {
-				CtxMenuManager.hide();
-			})
-			.on('click', function(){
 				deselectAll();
 			});
+		} else {
+			panArea
+				.on('mousedown', function () {
+					CtxMenuManager.hide();
+				})
+				.on('click', function(){
+					deselectAll();
+				});
+		}		
 
 		svg.append('g').attr('class', 'children-links')
 			.call(zoom)
-			.on('touchstart.zoom', null)
-            .on('mousedown.zoom', null)
-            .on('dblclick.zoom', null);
+			.on('dblclick.zoom', null);
 		
 		svg.append('g').attr('class', 'relationship-links')
 			.call(zoom)
-			.on('touchstart.zoom', null)
-            .on('mousedown.zoom', null)
-            .on('dblclick.zoom', null);
+			.on('dblclick.zoom', null);
 			
 		svg.append('g').attr('class', 'nodes')
 			.call(zoom)
-			.on('touchstart.zoom', null)
-            .on('mousedown.zoom', null)
-            .on('dblclick.zoom', null);
+			.on('dblclick.zoom', null);
 
         svg.append('g').attr('class', 'groups')
-			.call(zoom)
-            .on('dblclick.zoom', null);
-	
-		brush = d3.svg.brush().x(xScale).y(yScale)
-			.on('brushstart', function (){
-		        if (brushLayer)
-					brushLayer.call(brush.clear());
-		    })
-			.on('brush', function() {
-		        if (brush.empty())
-		            return;
+        	.call(zoom)
+			.on('dblclick.zoom', null);
+		
+		if (!isTouchDevice)
+			brush = d3.svg.brush().x(xScale).y(yScale)
+				.on('brushstart', function (){
+			        if (brushLayer)
+						brushLayer.call(brush.clear());
+			    })
+				.on('brush', function() {
+			        if (brush.empty())
+			            return;
 
-		        var e = brush.extent();
-		        var x1 = e[0][0], x2 = e[1][0],
-		            y1 = e[0][1], y2 = e[1][1];
+			        var e = brush.extent();
+			        var x1 = e[0][0], x2 = e[1][0],
+			            y1 = e[0][1], y2 = e[1][1];
 
-		        dataNodes.forEach(function (node) {
-					var x = node.x,	y = node.y,
-						w = nodeWidth,h = nodeHeight;
-					if (x2 > x && x + w > x1 && y2 > y && y + h > y1)
-						selectNode(node);
-					else
-						deselectNode(node);
+			        dataNodes.forEach(function (node) {
+						var x = node.x,	y = node.y,
+							w = nodeWidth,h = nodeHeight;
+						if (x2 > x && x + w > x1 && y2 > y && y + h > y1)
+							selectNode(node);
+						else
+							deselectNode(node);
+					});
+					dataGroups.forEach(function (group) {
+						var x = group.x,	y = group.y,
+							w = group.width,h = group.height;
+						if (x2 > x && x + w > x1 && y2 > y && y + h > y1)
+							selectGroup(group);
+						else
+							deselectGroup(group);
+					});
+					update();
+			    })
+				.on('brushend', endBrush);	
+
+		if (isTouchDevice){
+			var openBgCtxMenuDots = svg.append('g')
+				.attr({
+					id: 'open-bg-context-menu',
+					'class': 'open-context-menu',
+					transform: 'translate('+ (w - 2 * dotRadius) + ', 0)'
 				});
-				dataGroups.forEach(function (group) {
-					var x = group.x,	y = group.y,
-						w = group.width,h = group.height;
-					if (x2 > x && x + w > x1 && y2 > y && y + h > y1)
-						selectGroup(group);
-					else
-						deselectGroup(group);
-				});
-				update();
-		    })
-			.on('brushend', endBrush);		
+			openBgCtxMenuDots.append('rect').attr({
+				x: - 2 * dotRadius,
+				width: 4 * dotRadius,
+				height: 10 * dotRadius
+			});
+			openBgCtxMenuDots.append('circle').attr({
+				cy: 2 * dotRadius,
+				r: dotRadius
+			});
+			openBgCtxMenuDots.append('circle').attr({
+				cy: 5 * dotRadius,
+				r: dotRadius
+			});
+			openBgCtxMenuDots.append('circle').attr({
+				cy: 8 * dotRadius,
+				r: dotRadius
+			});
+		}	
 
 		// add tooltip
-		TooltipManager.createTooltip(viewport, svg); 
+		TooltipManager.create(viewport, svg); 
 			
 		CtxMenuManager.initBackgroundMenu({
 			editNewObject: function(type, x, y){
-				console.log(type, x, y);
 				if (type == 'node'){
 					tmpNode = {
 						x: xScale.invert(x) - nodeWidth * 0.5, 
@@ -2961,7 +3066,7 @@ var familyTree = (function (isTouchDevice){
 			container: svg
 		});
 
-		CtxMenuManager.onRightClick(null, panArea, svg)
+		CtxMenuManager.onRightClick(null, isTouchDevice ? svg.select('#open-bg-context-menu') : panArea, svg);
 
 		CtxMenuManager.initNodeMenu({
 			delete: function(){
@@ -3041,6 +3146,7 @@ var familyTree = (function (isTouchDevice){
 			}
 		});
 
+		var submitEvent = (isTouchDevice) ? 'touchstart' : 'click';
 		var popup = $('#node-popup');
 		if (popup){
 			popup.on("hide.bs.modal", function () {
@@ -3050,7 +3156,8 @@ var familyTree = (function (isTouchDevice){
 	 			});
 			});
 
-		 	popup.on('click', '#submit', function(){
+
+		 	popup.on(submitEvent, '#submit', function(){
 		 		var form = popup.find('.form-horizontal');
 		 			nodeId = form.find('#input-id').val();
 	 			if (!form.valid())
@@ -3094,7 +3201,7 @@ var familyTree = (function (isTouchDevice){
 	 			});
 			});
 
-		 	gpopup.on('click', '#submit', function(){
+		 	gpopup.on(submitEvent, '#submit', function(){
 		 		var form = gpopup.find('.form-horizontal');
 		 			groupId = form.find('#input-id').val();
 	 			if (!form.valid())
@@ -3126,6 +3233,36 @@ var familyTree = (function (isTouchDevice){
 		}
 	};
 	
+	var destroy = function(dom, w, h){
+		if (svg && !svg.empty()){
+			svg.remove();
+			svg = null;
+		}
+		
+		xScale = null;
+		yScale = null;
+		zoom = null;
+		currentScale = maxScale;
+
+        brush = null;
+		brushLayer = null;
+        
+		// remove tooltip
+		TooltipManager.remove(); 
+			
+		CtxMenuManager.reset();
+
+		var submitEvent = (isTouchDevice) ? 'touchstart' : 'click';
+		var popup = $('#node-popup');
+		if (popup){
+			popup.on(submitEvent, '#submit', null);
+		}
+		var gpopup = $('#group-popup');
+		if (gpopup){
+		 	gpopup.on(submitEvent, '#submit', null);
+		}
+	};
+
 	var resize = function(w, h){
 		if (!svg || svg.empty())
 			return;
@@ -3143,6 +3280,8 @@ var familyTree = (function (isTouchDevice){
 			yScale.range()[0] = 0;
 			yScale.range()[1] = h;
 		}
+		if (isTouchDevice)
+			svg.select('#open-bg-context-menu').attr('transform', 'translate('+ (w - 2 * dotRadius) + ', 0)');
 		update();		
 	};
 	
@@ -3171,8 +3310,8 @@ var familyTree = (function (isTouchDevice){
 
         // nodes is a subset of dataNodes
         if (!dataNodes || !dataNodes.length) {
-            zoom.scale(1).translate([0, 0]);
-            currentScale = 1;
+            zoom.scale(maxScale).translate([0, 0]);
+            currentScale = maxScale;
             update(transitionDuration);
             return;
         }
@@ -3185,7 +3324,7 @@ var familyTree = (function (isTouchDevice){
 		canvasInfo.w -= 2 * canvasInfo.padding; // no padding
         canvasInfo.h -= 2 * canvasInfo.padding; // no padding
         var padding = 20;
-        var newScale = Math.min(1, Math.min((h - padding * 2) / canvasInfo.h, (w - padding * 2) / canvasInfo.w));
+        var newScale = Math.min(maxScale, Math.min((h - padding * 2) / canvasInfo.h, (w - padding * 2) / canvasInfo.w));
         var newTranslate = [];
         newTranslate[0] = w / 2 - newScale * (canvasInfo.xRange[0] + canvasInfo.xRange[1]) / 2;
         newTranslate[1] = h / 2 - newScale * (canvasInfo.yRange[0] + canvasInfo.yRange[1]) / 2;	
@@ -3212,6 +3351,11 @@ var familyTree = (function (isTouchDevice){
     };
 	
 	var centerSelection = function () {
+		if (isTouchDevice){
+			var navbar = $("#main-navbar-collapse");
+			if (navbar.is(":visible"))
+				navbar.collapse('toggle');
+		}
 		CtxMenuManager.hide();
 		var groups = dataGroups.filter(function(group){return group.selected == true;}),
 			nodes = dataNodes.filter(function(node){return node.selected == true;}),
@@ -3229,13 +3373,17 @@ var familyTree = (function (isTouchDevice){
 	};
 	
 	var centerAll = function () {
+		if (isTouchDevice){
+			var navbar = $("#main-navbar-collapse");
+			if (navbar.is(":visible"))
+				navbar.collapse('toggle');
+		}
 		CtxMenuManager.hide();
 		centerTo(dataNodes, dataGroups, 500);
 	};
 
-	var isMovingBrush = function(){ 
-		console.log(brushLayer, !brush.empty())
-    	return brushLayer && !brush.empty()
+	var isMovingBrush = function(){
+    	return !isTouchDevice && brushLayer && !brush.empty();
     };
 
     var getBrushLayer = function(){ 
@@ -3244,6 +3392,8 @@ var familyTree = (function (isTouchDevice){
 
     var startBrush = function(){
 		CtxMenuManager.hide();
+		if (isTouchDevice)
+			return;
 		var xDomain = xScale.domain(), yDomain = yScale.domain(),
 			xRange = xScale.range(), yRange = yScale.range(),
 			w = parseInt(svg.attr('width')),
@@ -3480,7 +3630,7 @@ var familyTree = (function (isTouchDevice){
         
         svgToCapture.select('defs').append('style').attr('type', 'text/css').text(cssText);
 		
-		svgToCapture.selectAll('.hidden-link,.hide').remove();
+		svgToCapture.selectAll('.hidden-link,.hide,.open-context-menu').remove();
 		                
 		// Set scale parameter
 		var xS = d3.scale.linear().domain([0, w]).range([0, scale * w]);
@@ -3578,10 +3728,7 @@ var familyTree = (function (isTouchDevice){
     };
 
     var openNodePopup = function(node){
-    	if (node)
-    		console.log('esiste già');
-
-        else {
+    	if (!node) {
 	        var xDomain = xScale.domain(),
 				yDomain = yScale.domain(),
 				x = (xDomain[1] - xDomain[0] - nodeWidth) * 0.5,
@@ -3593,10 +3740,7 @@ var familyTree = (function (isTouchDevice){
     };
 
     var openGroupPopup = function(group){
-    	if (group)
-    		console.log('esiste già');
-
-        else {
+    	if (!group) {
 	        var xDomain = xScale.domain(),
 				yDomain = yScale.domain(),
 				x = (xDomain[1] - xDomain[0]) * 0.5,
@@ -3607,8 +3751,16 @@ var familyTree = (function (isTouchDevice){
     	$('#group-popup').modal();
     };
 
+    var openElementPopup = function(element){
+    	if (element.isGroup)
+    		openGroupPopup(element);
+    	else if (element.isNode)
+    		openNodePopup(element);
+    };
+
 	return {
 		init: init,	
+		destroy: destroy,
 		resize: resize,
 		draw: draw,
 		update: update,
@@ -3634,6 +3786,9 @@ var familyTree = (function (isTouchDevice){
 		undo: function() { HistoryManager.undo(); },
 		redo: function() { HistoryManager.redo(); },
 		openNodePopup: openNodePopup,
-		openGroupPopup: openGroupPopup
+		openGroupPopup: openGroupPopup,
+		openElementPopup: openElementPopup,
+		enableMultiSelection: function(){ isMultiSelection = true; },
+		disableMultiSelection: function(){ isMultiSelection = false; }
 	};
 })('ontouchstart' in window || 'onmsgesturechange' in window); // cd1 works on most browsers || cd2 works on IE10/11 and Surface
