@@ -23,6 +23,12 @@ var tooltipManager = function(){
 	        });
     };
 
+    function removeTooltip(){
+        if (!tooltip || tooltip.empty())
+            return;        
+        tooltip.remove();
+    };
+
     function setPosition(pos, width, height) {
         if (!tooltip || tooltip.empty())
             return;
@@ -116,7 +122,8 @@ var tooltipManager = function(){
     };
 
     return {
-    	createTooltip: createTooltip,
+    	create: createTooltip,
+        remove:  removeTooltip,
     	setPosition: setPosition,
     	show: show,
     	hide: hide
