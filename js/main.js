@@ -1,7 +1,7 @@
 // remove shortcut if it is a touch device
 var isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window; // cd1 works on most browsers || cd2 works on IE10/11 and Surface
 if (isTouchDevice){
-	$('.cmd-text').addClass('hidden');
+	$('.cmd-text:not(.caret-right)').addClass('hidden');
 }
 
 var viewport = document.getElementById('viewport');
@@ -113,7 +113,7 @@ document.body.onresize = onResize;
 familyTree.init(viewport, document.body.clientWidth, document.body.clientHeight);
 onResize();
 
-var eventType = isTouchDevice ? 'touchstart' : 'click';
+var eventStart = isTouchDevice ? 'touchstart' : 'click';
 
 var treeNameItem = $('#loaded-tree-name'),
 	alertPopup = $('#alert-popup'),
@@ -122,19 +122,17 @@ var treeNameItem = $('#loaded-tree-name'),
 	fileField = openFilePopup.find('#field-file-name #input-file'),
 	undoMenuItem = $('#undo-item'),
 	redoMenuItem = $('#redo-item'),
-	createNodeMenuItem = $('#create-node-item'),
-	createGroupMenuItem = $('#create-group-item'),
 	deleteMenuItem = $('#delete-item'),
 	seachField = $('#search-field'),
 	fileNameItem = $('#loaded-file-name'),
 	centerSelItem = $('#center-selection-item'),
 	extendItem = $('#extend-item');
 
-$('nav').on('mousedown', function(){
-	familyTree.hideContextMenus();
+$('nav').on(eventStart, function(){
+	//familyTree.hideContextMenus();
 });
 
-$('#search-btn').on(eventType, function(e){
+$('#search-btn').on(eventStart, function(e){
 	e.preventDefault();
 	var records = seachField.serializeArray(),
 		values = {};
@@ -148,7 +146,7 @@ saveAsPopup.on("hide.bs.modal", function () {
 });
 
 // create new tree
-$('#new-item').on(eventType, function(){
+$('#new-item').on(eventStart, function(){
 	if (!undoMenuItem.hasClass('disabled')){
 		alertPopup.modal();
 		alertPopup.isLoadingNewTree = true;
@@ -167,7 +165,7 @@ openFilePopup.on("hide.bs.modal", function () {
 	openFilePopup.find("#upload-file-info").val('');
 });
 
-openFilePopup.find('#upload-file-btn').on(eventType, function(){
+openFilePopup.find('#upload-file-btn').on(eventStart, function(){
 	if (fileContent)
 		familyTree.load(JSON.parse(fileContent));
 	openFilePopup.modal('hide');	
@@ -179,8 +177,6 @@ fileField.on('change', function(){
 	var name = nameArray[nameArray.length - 1];
 	openFilePopup.find("#upload-file-info").val(name);
 
-	console.log((window.URL || window.webkitURL).createObjectURL(this.files.item(0)))
-
 	var reader = new FileReader();
 	reader.onload = function(){
         treeNameItem.html(name.replace('.json', '')).removeClass('modified');
@@ -189,12 +185,12 @@ fileField.on('change', function(){
     reader.readAsText(this.files.item(0)); 
 })
 
-alertPopup.find('#yes').on(eventType, function(){ 
+alertPopup.find('#yes').on(eventStart, function(){ 
 	alertPopup.modal('hide');
 	saveAsPopup.modal();
 });
 
-alertPopup.find('#no').on(eventType, function(){ 
+alertPopup.find('#no').on(eventStart, function(){ 
 	alertPopup.modal('hide');
 	if (alertPopup.isLoadingNewTree){
 		alertPopup.isLoadingNewTree = false;
@@ -206,7 +202,7 @@ alertPopup.find('#no').on(eventType, function(){
 	} 
 });
 
-$('#open-item').on(eventType, function(){
+$('#open-item').on(eventStart, function(){
 	if (!undoMenuItem.hasClass('disabled')){
 		alertPopup.modal();		
 		alertPopup.isOpeningTree = true;
@@ -231,11 +227,11 @@ saveAsPopup.find('.btn-group[data-toggle-name]').each(function () {
     });
 });
 
-$('#save-as-item').on(eventType, function(){
+$('#save-as-item').on(eventStart, function(){
 	saveAsPopup.modal();
 });
 
-$('#save-item').on(eventType, function(){
+$('#save-item').on(eventStart, function(){
 	familyTree.saveAs('json', treeNameItem.html());
 });
 
@@ -248,7 +244,7 @@ saveAsPopup.find("#input-format").on('change', function() {
 		sField.addClass('hide');
 });
 
-saveAsPopup.find('#save').on(eventType, function(){
+saveAsPopup.find('#save').on(eventStart, function(){
 	var form = saveAsPopup.find('.form-horizontal');
 		nodeId = form.find('#input-id').val();
 	if (!form.valid())
@@ -262,7 +258,7 @@ saveAsPopup.find('#save').on(eventType, function(){
 	familyTree.saveAs(values.format, values.fileName, values.scale);
 
 	saveAsPopup.modal('hide');
-	$('json-format-opt').trigger(eventType);
+	$('json-format-opt').trigger(eventStart);
 	$('#input-name').val('');
 	$('#field-scale').val(100);
 
@@ -278,40 +274,30 @@ saveAsPopup.find('#save').on(eventType, function(){
 
 
 // edit
-$('#edit-menu').on(eventType, function (){
-	var count = familyTree.getSelection().length;
+$('#edit-menu').on(eventStart, function (){
+	var selection = familyTree.getSelection(),
+		count = selection.length;
 	if (count)
 		deleteMenuItem.removeClass('disabled');
-	else
+	else 
 		deleteMenuItem.addClass('disabled');
 });
 
-undoMenuItem.on(eventType, undo);
+undoMenuItem.on(eventStart, undo);
 
-redoMenuItem.on(eventType, redo);
+redoMenuItem.on(eventStart, redo);
 
-createNodeMenuItem.on(eventType, function(){
-	familyTree.openNodePopup();
+deleteMenuItem.on(eventStart, deleteElements);
+
+$('#select-all-item').on(eventStart, selectAll);
+
+$('#selection-area-item').on(eventStart, function(){
+	if (!isTouchDevice && !familyTree.getBrushLayer()) 
+		familyTree.startBrush();
 });
-
-createGroupMenuItem.on(eventType, function(){
-	familyTree.openGroupPopup();
-});
-
-deleteMenuItem.on(eventType, deleteElements);
-
-$('#select-all-item').on(eventType, selectAll);
-
-if (!isTouchDevice){	
-	createNodeMenuItem.addClass('hide');
-	createGroupMenuItem.addClass('hide');
-} else {
-	createNodeMenuItem.removeClass('hide');
-	createGroupMenuItem.removeClass('hide');
-}
 
 //view
-$('#view-menu').on(eventType, function(){
+$('#view-menu').on(eventStart, function(){
 	var count = familyTree.getSelection().length;
 	if (count)
 		centerSelItem.removeClass('disabled');
@@ -319,11 +305,11 @@ $('#view-menu').on(eventType, function(){
 		centerSelItem.addClass('disabled');
 });
 
-centerSelItem.on(eventType, function(){
+centerSelItem.on(eventStart, function(){
 	familyTree.centerSelection();
 });
 
-extendItem.on(eventType, function(){
+extendItem.on(eventStart, function(){
 	familyTree.centerAll();
 });
 
@@ -331,7 +317,7 @@ extendItem.on(eventType, function(){
 var langMenu = $('#language-menu');
 	
 langMenu.parent().find('li').each(function(){
-	$(this).find('a').on(eventType, function(){
+	$(this).find('a').on(eventStart, function(){
 		langMenu.parent().find('li.active').removeClass('active');
 		var $a = $(this);
 		$a.parent().addClass('active');
@@ -341,10 +327,24 @@ langMenu.parent().find('li').each(function(){
  	});
 });	
 
-$(document).on(eventType, '#main-navbar-collapse', function(e) {
+$('#main-navbar-collapse').on(eventStart, function(e) {
+	familyTree.hideContextMenus();
+});
+
+$('#viewport').on(eventStart, function(){
+	$('nav a[aria-expanded=true]').collapse('hide');
+	if (isTouchDevice){
+		var navbar = $("#main-navbar-collapse");
+		if (navbar.is(":visible"))
+			navbar.collapse('toggle');
+	}
+})
+
+$(document).on(eventStart, '#main-navbar-collapse', function(e) {
 	var $target = $(e.target);
     if($target.is('a') && $target.attr('class') != 'dropdown-toggle' )
     	$(this).collapse('hide');
+    familyTree.hideContextMenus();
 });
 
 $(document).on('action', function(ev, action, undoCounter, redoCounter){
