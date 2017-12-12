@@ -330,7 +330,7 @@ langMenu.parent().find('li').each(function(){
 $('#main-navbar-collapse').on(eventStart, function(e) {
 	familyTree.hideContextMenus();
 });
-
+/*
 $('#viewport').on(eventStart, function(){
 	$('nav a[aria-expanded=true]').collapse('hide');
 	if (isTouchDevice){
@@ -339,7 +339,7 @@ $('#viewport').on(eventStart, function(){
 			navbar.collapse('toggle');
 	}
 })
-
+*/
 $(document).on(eventStart, '#main-navbar-collapse', function(e) {
 	var $target = $(e.target);
     if($target.is('a') && $target.attr('class') != 'dropdown-toggle' )
