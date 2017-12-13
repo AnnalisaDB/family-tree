@@ -178,6 +178,14 @@ var contextMenuManager = function(isTouchDevice){
 		if (nodeCtxMenu && nodeCtxMenu.html() !== undefined){
 
 			nodeCtxMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function() {
+				nodeCtxMenu.find('#add-to-group, #remove-from-group').each(function(){
+					var groupsList = $(this).next('ul');
+					if (groupsList.is(':visible'))
+						groupsList
+							.removeClass('dropdown-menu-left')
+							.removeClass('dropdown-menu-up')
+							.hide();
+				});
 				var id = $(this).attr('id');
 				if (id == 'delete' && applyCallbacks.delete)
 					applyCallbacks.delete();
@@ -191,10 +199,10 @@ var contextMenuManager = function(isTouchDevice){
 					applyCallbacks.centerAll();
 				else if (id == 'link-to-partner' && applyCallbacks.linkToPartner)
 					applyCallbacks.linkToPartner();
-				else if (id == 'add-to-group'){
+				/*else if (id == 'add-to-group'){
 					event.stopPropagation();
 					event.preventDefault();
-				} else if ((id == 'add-to-new-group' || id.indexOf('add-to-existing-group-') != -1) || 
+				} */else if ((id == 'add-to-new-group' || id.indexOf('add-to-existing-group-') != -1) || 
 						(id == 'remove-from-group' || id.indexOf('remove-from-existing-group-') != -1)){
 					var el = this;
 					while (el && el.className.indexOf('dropdown-menu') == -1)
@@ -212,10 +220,15 @@ var contextMenuManager = function(isTouchDevice){
 				nodeCtxMenu.hide();
 			});
 
-			nodeCtxMenu.find('#add-to-group, #remove-from-group')
-				.on('mouseover', function(){
-					$(this).next('ul').show();
-				}).on('mouseout', function(ev){
+			var groupsListItems = nodeCtxMenu.find('#add-to-group, #remove-from-group');
+			groupsListItems.on(isTouchDevice ? 'touchstart': 'mouseover', function(){
+					var groupsListMenu = $(this).next('ul');
+					groupsListMenu.show();
+					_updateGroupsListPosition(groupsListMenu);
+				});
+
+			if (!isTouchDevice)
+				groupsListItems.on('mouseout', function(ev){
 					var el = ev.toElement;
 					var ul = $(this).next('ul');
 					while (el && el != this.parentNode)
@@ -226,14 +239,137 @@ var contextMenuManager = function(isTouchDevice){
 		}
 	};
 
+	function _updateGroupsListPosition(listMenu){
+		if (!listMenu || !listMenu.html())
+			return;
+
+		// initialization
+		listMenu.removeClass('dropdown-menu-left')
+				.removeClass('dropdown-menu-up');
+
+		var menuRect = listMenu.get(0).getBoundingClientRect(),
+			viewRect = nodeCtxMenu.viewport.getBoundingClientRect();
+		
+		if (menuRect.bottom > viewRect.bottom)
+			listMenu.addClass('dropdown-menu-up');
+		if (menuRect.right > viewRect.right)
+			listMenu.addClass('dropdown-menu-left');
+	};
+
+	function updateAddToGroupsItem(groupsList, callback){
+		callback = callback || function(){};
+		var $li = $('#add-to-group').parent('li'),
+			menu = $li.find('.dropdown-menu');
+
+		menu.off(isTouchDevice ? 'touchstart' : 'click', '.existing-group a');
+
+		// remove last groups list
+		menu.find('.existing-group,.divider').each(function(){
+			$(this).remove();
+		});
+		
+		var lastEl = menu.find('#add-to-new-group').parent('li');
+
+		if (groupsList && groupsList.length){
+			groupsList.sort(function(a, b) {
+				var tA = a.text.toUpperCase(); // ignore upper and loadd-to-new-groupwercase
+				var tB = b.text.toUpperCase(); // ignore upper and lowercase
+				if (tA < tB) return -1;
+				if (tA > tB) return 1;
+				// texts must be equal
+				return 0;
+			});
+
+			groupsList.forEach(function(g){
+				var text = g.text.split(/\r\n|\r|\n/),
+					li = '<li class="existing-group"><a tabindex="-1" href="#" id="add-to-existing-group-' + g.id + '">';
+				li += text[0];
+				if (text.length > 1) 
+					li += '...</a></li>';
+				lastEl.before(li);
+			});
+			lastEl.before('<li class="divider"></li>');
+
+			menu.on(isTouchDevice ? 'touchstart' : 'click', '.existing-group a', function(){
+				var el = this,
+					$el = $(this),
+					id = $el.attr('id').substring(22);
+				while (el && el.className.indexOf('dropdown-menu') == -1)
+					el = el.parentNode;
+				if (el)
+					$(el).hide();
+				nodeCtxMenu.hide();
+
+				callback(id);
+			});
+		}
+	};
+
+	function updateRemoveFromGroupsItem(groupsList, callback){
+		callback = callback || function(){};
+		var $li = $('#remove-from-group').parent('li'),
+			menu = $li.find('.dropdown-menu');
+
+		menu.off(isTouchDevice ? 'touchstart' : 'click', '.existing-group a');
+
+		// remove last groups list
+		menu.find('.existing-group').each(function(){
+			$(this).remove();
+		});
+		
+		if (groupsList && groupsList.length){
+			groupsList.sort(function(a, b) {
+				var tA = a.text.toUpperCase(); // ignore upper and loadd-to-new-groupwercase
+				var tB = b.text.toUpperCase(); // ignore upper and lowercase
+				if (tA < tB) return -1;
+				if (tA > tB) return 1;
+				// texts must be equal
+				return 0;
+			});
+
+			groupsList.forEach(function(g){
+				var text = g.text.split(/\r\n|\r|\n/),
+					li = '<li class="existing-group"><a tabindex="-1" href="#" id="remove-from-existing-group-' + g.id + '">';
+				li += text[0];
+				if (text.length > 1) 
+					li += '...</a></li>';
+				menu.append(li);
+			});
+			
+			menu.on(isTouchDevice ? 'touchstart' : 'click', '.existing-group a', function(){
+				var el = this,
+					$el = $(this),
+					id = $el.attr('id').substring(27);
+				while (el && el.className.indexOf('dropdown-menu') == -1)
+					el = el.parentNode;
+				if (el)
+					$(el).hide();
+				nodeCtxMenu.hide();
+
+				callback(id);
+			});
+
+			$li.find('#remove-from-group').removeClass('disabled');
+			return;
+		}
+		$li.find('#remove-from-group').addClass('disabled');
+	};
+
 	function resetNodeMenu(){
-		if (nodeCtxMenu && nodeCtxMenu.html() !== undefined)
+		if (nodeCtxMenu && nodeCtxMenu.html() !== undefined){
 			nodeCtxMenu.off(isTouchDevice ? 'touchstart' : 'click', 'a');
+			if (nodeCtxMenu.viewport){
+				$(nodeCtxMenu.viewport).off(isTouchDevice ? 'touchstart' : 'contextmenu');
+				nodeCtxMenu.viewport = null;
+			}
+		}
 	};
 
 	function _onNodeRightClick(d3selection, d3container, cfg){
 		if (!d3selection || d3selection.empty())
 			return;
+
+		nodeCtxMenu.viewport = d3container.node();
 
 		cfg = cfg || {};
 		var getSelectionCount = cfg.getSelectionCount;
@@ -325,6 +461,8 @@ var contextMenuManager = function(isTouchDevice){
 		initGroupMenu: initGroupMenu,
 		initNodeMenu: initNodeMenu,
 		onRightClick: onRightClick,
+		updateAddToGroupsItem: updateAddToGroupsItem,
+		updateRemoveFromGroupsItem: updateRemoveFromGroupsItem,
 		hide: hide,
 		getContextMenu: getContextMenu,
 		enableLinkToPartner: enableLinkToPartner,
