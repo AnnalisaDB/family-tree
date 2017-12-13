@@ -1,9 +1,10 @@
-var contextMenuManager = function(){
-
+var contextMenuManager = function(isTouchDevice){
 	var bgCtxMenu, nodeCtxMenu, groupCtxMenu;
 
-	function _getMousePosition(ev){
+	function _getPosition(ev){
 		var x = 0, y = 0;
+		if (isTouchDevice && ev.touches.length == 1)
+			ev = ev.touches[0];
 		if (ev.pageX || ev.pageY) {
 			x = ev.pageX;
 			y = ev.pageY;
@@ -37,6 +38,13 @@ var contextMenuManager = function(){
 			ctxMenu.css('top', y + dy)
 	};
 
+	function resetContextMenus(){
+		hide();
+		resetBackgroundMenu();
+		resetNodeMenu();
+		resetGroupMenu();
+	};
+
 	function initBackgroundMenu(applyCallbacks, onRightClickTo){
 		applyCallbacks = applyCallbacks || {};
 		onRightClickTo = onRightClickTo || {};
@@ -45,7 +53,7 @@ var contextMenuManager = function(){
 		
 		if (bgCtxMenu && bgCtxMenu.html() !== undefined){
 
-			bgCtxMenu.on('click', 'a', function() {
+			bgCtxMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function() {
 				var id = $(this).attr('id');
 				if (id == 'create-node' || id == 'create-group'){
 					var left = +bgCtxMenu.css('left').replace('px',''), 
@@ -67,13 +75,17 @@ var contextMenuManager = function(){
 		}
 	};
 
+	function resetBackgroundMenu(){
+		if (bgCtxMenu && bgCtxMenu.html() !== undefined)
+			bgCtxMenu.off(isTouchDevice ? 'touchstart' : 'click', 'a');
+	};
+
 	function _onBackgroundRightClick(d3selection, d3container){
 		if (!d3selection || d3selection.empty() || !d3container || d3container.empty())
 			return;
-
-		d3selection.on('contextmenu', function(){
+		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(){
 			d3.event.preventDefault();
-			var p = _getMousePosition(d3.event);
+			var p = _getPosition(d3.event);
 			var x = p[0], y = p[1];
 			
 			bgCtxMenu.css({
@@ -93,7 +105,7 @@ var contextMenuManager = function(){
 
 		if (groupCtxMenu && groupCtxMenu.html() !== undefined){
 			
-			groupCtxMenu.on('click', 'a', function(ev) {
+			groupCtxMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function(ev) {
 				var id = $(this).attr('id');
 				
 				if (id == 'delete' && applyCallbacks.delete){
@@ -105,10 +117,17 @@ var contextMenuManager = function(){
 					applyCallbacks.centerSelection();
 				else if (id == 'center-all' && applyCallbacks.centerAll)
 					applyCallbacks.centerAll();
+				else if (id == 'details-group' && applyCallbacks.showInfo)
+					applyCallbacks.showInfo()
 				
 				groupCtxMenu.hide();
 			});
 		}
+	};
+
+	function resetGroupMenu(){
+		if (groupCtxMenu && groupCtxMenu.html() !== undefined)
+			groupCtxMenu.off(isTouchDevice ? 'touchstart' : 'click', 'a');
 	};
 
 	function _onGroupRightClick(d3selection, d3container, cfg){
@@ -118,9 +137,9 @@ var contextMenuManager = function(){
 		cfg = cfg || {};
 		var getSelectionCount = cfg.getSelectionCount;
 
-		d3selection.on('contextmenu', function(group){
+		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(group){
 			d3.event.preventDefault();
-			var p = _getMousePosition(d3.event);
+			var p = _getPosition(d3.event);
 			var x = p[0], y = p[1];
 
 			groupCtxMenu.css({ display: 'block' });
@@ -158,10 +177,12 @@ var contextMenuManager = function(){
 
 		if (nodeCtxMenu && nodeCtxMenu.html() !== undefined){
 
-			nodeCtxMenu.on('click', 'a', function() {
+			nodeCtxMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function() {
 				var id = $(this).attr('id');
 				if (id == 'delete' && applyCallbacks.delete)
 					applyCallbacks.delete();
+				else if (id == 'details-node' && applyCallbacks.showInfo)
+					applyCallbacks.showInfo();
 				else if (id == 'edit-node' && applyCallbacks.editNode)
 					applyCallbacks.editNode()
 				else if (id == 'center-selection' && applyCallbacks.centerSelection)
@@ -205,6 +226,11 @@ var contextMenuManager = function(){
 		}
 	};
 
+	function resetNodeMenu(){
+		if (nodeCtxMenu && nodeCtxMenu.html() !== undefined)
+			nodeCtxMenu.off(isTouchDevice ? 'touchstart' : 'click', 'a');
+	};
+
 	function _onNodeRightClick(d3selection, d3container, cfg){
 		if (!d3selection || d3selection.empty())
 			return;
@@ -213,9 +239,9 @@ var contextMenuManager = function(){
 		var getSelectionCount = cfg.getSelectionCount;
 		var updateItems = cfg.updateItems;
 
-		d3selection.on('contextmenu', function(node){
+		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(node){
 			d3.event.preventDefault();
-			var p = _getMousePosition(d3.event);
+			var p = _getPosition(d3.event);
 			var x = p[0], y = p[1];
 
 			nodeCtxMenu.css({ display: 'block' });
@@ -302,6 +328,7 @@ var contextMenuManager = function(){
 		hide: hide,
 		getContextMenu: getContextMenu,
 		enableLinkToPartner: enableLinkToPartner,
-		disableLinkToPartner: disableLinkToPartner
+		disableLinkToPartner: disableLinkToPartner,
+		reset: resetContextMenus
 	}
 };
