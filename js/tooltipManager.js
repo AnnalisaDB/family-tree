@@ -1,4 +1,4 @@
-var tooltipManager = function(){
+var tooltipManager = function(isTouchDevice){
 
 	var tooltipData = null;
 	var tooltip = null;
@@ -17,7 +17,15 @@ var tooltipManager = function(){
 			.attr('class', 'tooltip')
 			.style("opacity", 0);
 
-		if (targetSvg && !targetSvg.empty())
+        tooltip.append('span')
+            .attr('class', 'glyphicon glyphicon-remove')
+            .classed('hide', !isTouchDevice)
+            .style('float', 'right')
+            .on(isTouchDevice ? 'touchstart' : 'click', function(){ hide(200); });
+
+        tooltip.append('table');
+
+		if (!isTouchDevice && targetSvg && !targetSvg.empty())
 			targetSvg.on('mousemove', function () {
 	            setPosition(d3.mouse(this), +targetSvg.attr('width'), +targetSvg.attr('height'));
 	        });
@@ -76,7 +84,7 @@ var tooltipManager = function(){
 	    else if (data && data.isGroup)
 	    	html = _getGroupHTML(data);
 	    
-        tooltip.html(html);
+        tooltip.select('table').html(html);
         tooltipData = data;
     };
 
@@ -85,7 +93,7 @@ var tooltipManager = function(){
     	if (!data.isNode)
     		return html;
         
-        html += '<table><tr class="tooltip-info"><td>' + dictionary.get('Name') + '</td><td><span class="tooltip-value">' 
+        html += '<tr class="tooltip-info"><td>' + dictionary.get('Name') + '</td><td><span class="tooltip-value">' 
         		+ (data.name || '---')
                 + '</span></td></tr><tr class="tooltip-info"><td>' + dictionary.get('Surname') + '</td><td><span class="tooltip-value">' 
                 + (data.surname || '---');
@@ -96,7 +104,7 @@ var tooltipManager = function(){
         	});
         } else 
             html += '</span></td></tr><tr class="tooltip-info"><td>' + dictionary.get('Description') + '</td><td><span class="tooltip-value">---';
-        html += '</span></td></tr></table>';
+        html += '</span></td></tr>';
 	    return html;
     };
 
@@ -105,7 +113,7 @@ var tooltipManager = function(){
     	if (!data.isGroup)
     		return html;
         
-        html += '<table><tr class="tooltip-info"><td>' + dictionary.get('Description') + '</td><td><span class="tooltip-value">';
+        html += '<tr class="tooltip-info"><td>' + dictionary.get('Description') + '</td><td><span class="tooltip-value">';
         if (data.text){
         	var lines = data.text.split(/\r\n|\r|\n/);
         	lines.forEach(function(line, i){
@@ -117,7 +125,6 @@ var tooltipManager = function(){
         	});
         } else
         	html += '---</span></td></tr>';
-        html += '</table>';
 	    return html;
     };
 
