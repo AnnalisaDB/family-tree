@@ -281,37 +281,15 @@ var familyTree = function (isTouchDevice){
 			// texts must be equal
 			return 0;
 		});
-		
-		var lastEl = $('#add-to-new-group').parent('li'),
-			menu = lastEl.parents('.dropdown-submenu').find('.dropdown-menu');
-			
-		menu.find('.existing-group,.divider').each(function(){$(this).remove()});
-		if (groupsList.length){
-			groupsList.forEach(function(g){
-				var text = g.text.split(/\r\n|\r|\n/),
-					li = '<li class="existing-group"><a tabindex="-1" href="#" id="add-to-existing-group-' + g.id + '">';
-				li += text[0];
-				if (text.length > 1) 
-					li += '...</a></li>';
-				lastEl.before(li);
-			});
-			lastEl.before('<li class="divider"></li>');
 
-			var eventStart = isTouchDevice ? 'touchstart' : 'click';
-			menu.on(eventStart, '.existing-group a', function(){
-				var el = this,
-					$el = $(this),
-					id = $el.attr('id').substring(22);
-				while (el && el.className.indexOf('dropdown-menu') == -1)
-					el = el.parentNode;
-				if (el)
-					$(el).hide();
-				CtxMenuManager.getContextMenu('node').hide();
-				var group = getGroupById(id),
+		CtxMenuManager.updateAddToGroupsItem(dataGroups.map(function(g){
+				return {id: g.id, text: g.text};
+			}), function(groupId){
+				var group = getGroupById(groupId),
 					nodesToAdd = dataNodes.filter(function(n){return n.selected == true && group.nodes.indexOf(n.id) == -1;});
 				addNodesTo(nodesToAdd, group);
-			})
-		}
+			}
+		);
 	};
 	
 	function getNodeById(id, dataset){
@@ -1430,111 +1408,44 @@ var familyTree = function (isTouchDevice){
     };
 
     function _updateAddToGroupsItem(){
-    	var $li = $('#add-to-group').parent('li'),
-			menu = $li.find('.dropdown-menu');
-
-		// remove last groups list
-		menu.find('.existing-group,.divider').each(function(){$(this).remove()});
-
     	if (!dataNodes.length)
 			return;
 		
-		var lastEl = menu.find('#add-to-new-group').parent('li');
-
 		var groupsList = [];
 		dataGroups.forEach(function(g){
 			groupsList.push({id: g.id, text: g.text});
 		});
 
-		if (groupsList.length){
-			groupsList.sort(function(a, b) {
-				var tA = a.text.toUpperCase(); // ignore upper and loadd-to-new-groupwercase
-				var tB = b.text.toUpperCase(); // ignore upper and lowercase
-				if (tA < tB) return -1;
-				if (tA > tB) return 1;
-				// texts must be equal
-				return 0;
-			});
-
-			groupsList.forEach(function(g){
-				var text = g.text.split(/\r\n|\r|\n/),
-					li = '<li class="existing-group"><a tabindex="-1" href="#" id="add-to-existing-group-' + g.id + '">';
-				li += text[0];
-				if (text.length > 1) 
-					li += '...</a></li>';
-				lastEl.before(li);
-			});
-			lastEl.before('<li class="divider"></li>');
-			menu.on('click', '.existing-group a', function(){
-				var el = this,
-					$el = $(this),
-					id = $el.attr('id').substring(22);
-				while (el && el.className.indexOf('dropdown-menu') == -1)
-					el = el.parentNode;
-				if (el)
-					$(el).hide();
-				CtxMenuManager.getContextMenu('node').hide();
-				var group = getGroupById(id),
+		CtxMenuManager.updateAddToGroupsItem(dataGroups.map(function(g){
+				return {id: g.id, text: g.text};
+			}), function(groupId){
+				var group = getGroupById(groupId),
 					nodesToAdd = dataNodes.filter(function(n){return n.selected == true && group.nodes.indexOf(n.id) == -1;});
 				addNodesTo(nodesToAdd, group);
-			})
-		}
+			}
+		);
     };
 
     function _updateRemoveFromGroupsItem(){
-    	var $li = $('#remove-from-group').parent('li'),
-			menu = $li.find('.dropdown-menu');
-
-		// remove last groups list
-		menu.find('.existing-group').each(function(){$(this).remove()});
-
     	var allSelected = dataNodes.filter(function(n){return n.selected == true; });
-		if (allSelected.length){
-			var groupsList = [];
-			allSelected.forEach(function(node){
-				var groups = util.tree.getGroupsByNode(node, dataGroups);
-				groups.forEach(function(g){ 
-					if (groupsList.indexOf(g) != -1)
-						return;
-					groupsList.push({id: g.id, text: g.text});
-				});
-				groupsList.sort(function(a, b) {
-					var tA = a.text.toUpperCase(); // ignore upper and loadd-to-new-groupwercase
-					var tB = b.text.toUpperCase(); // ignore upper and lowercase
-					if (tA < tB) return -1;
-					if (tA > tB) return 1;
-					// texts must be equal
-					return 0;
-				});
-				groupsList.forEach(function(g){
-					var text = g.text.split(/\r\n|\r|\n/),
-						li = '<li class="existing-group"><a tabindex="-1" href="#" id="remove-from-existing-group-' + g.id + '">';
-					li += text[0];
-					if (text.length > 1) 
-						li += '...</a></li>';
-					menu.append(li);
-				});
-				menu.on('click', '.existing-group a', function(){
-					var el = this,
-						$el = $(this),
-						id = $el.attr('id').substring(27);
-					while (el && el.className.indexOf('dropdown-menu') == -1)
-						el = el.parentNode;
-					if (el)
-						$(el).hide();
-					//CtxMenuManager.getContextMenu('node').hide();
-					var group = getGroupById(id),
-						nodesToRemove = dataNodes.filter(function(n){return n.selected == true && group.nodes.indexOf(n.id) != -1;});
-					removeNodesFrom(nodesToRemove, group);
-				});
+		if (!allSelected.length)
+			return;
+		var groupsList = [];
+		allSelected.forEach(function(node){
+			var groups = util.tree.getGroupsByNode(node, dataGroups);
+			groups.forEach(function(g){ 
+				if (groupsList.filter(function(gl){ return gl.id == g.id; }).length > 0)
+					return;
+				groupsList.push({id: g.id, text: g.text});
 			});
-			if (groupsList.length){
-				$li.find('#remove-from-group').removeClass('disabled');
-				return;
-			}
-		}
-        $li.find('#remove-from-group').addClass('disabled');
-    };
+		});
+
+		CtxMenuManager.updateRemoveFromGroupsItem(groupsList, function(groupId){
+			var group = getGroupById(groupId),
+				nodesToRemove = dataNodes.filter(function(n){return n.selected == true && group.nodes.indexOf(n.id) != -1;});
+			removeNodesFrom(nodesToRemove, group);
+		});
+	};
 	
     function selectGroup(group){
 		if (!group || group.selected)
