@@ -267,6 +267,13 @@ nav.tree-name .navbar-brand #loaded-tree-name.modified:hover {
     left: 100%;
     margin-top: -1px;
 }
+.dropdown-submenu .dropdown-menu.dropdown-menu-left {
+    left: -100%!important;
+    margin-left: -1px!important;
+}
+.dropdown-submenu .dropdown-menu.dropdown-menu-up {
+    top: -300%!important;
+}
 .caret-right {
     border-bottom: 4px solid transparent;
     border-top: 4px solid transparent;
