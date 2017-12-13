@@ -39,6 +39,7 @@ var dictionary = (function(){
 		'SelectArea': {eng: 'Select area', ita: 'Area di Selezione'},
 		'selectedItems': { eng: 'selected items', ita: 'elementi selezionati' },
 		'Sex': { eng: 'Sex', ita: 'Sesso' },
+		'ShowInfo': { eng: 'Show info', ita: 'Informazioni' },
 		'Surname': { eng: 'Surname', ita: 'Cognome' },
 		'Text': { eng: 'Text', ita: 'Testo' },
 		'TextSize': { eng: 'Text size', ita: 'Dimensione del testo' },
@@ -131,6 +132,7 @@ var dictionary = (function(){
 		$bgContextMenu.find('#select-all').html(get('SelectAll') + '<span class="cmd-text">Ctrl+A</span>');
 
 		var $nodeContextMenu = $('#nodeContextMenu');
+		$nodeContextMenu.find('#details-node span.item-text').hmtl(get('ShowInfo'));
 		$nodeContextMenu.find('#edit-node span.item-text').html(get('Edit'));
 		$nodeContextMenu.find('#delete span.item-text').html(get('Delete'));
 		$nodeContextMenu.find('#center-selection span.item-text').html(get('CenterSelection'));
@@ -141,6 +143,7 @@ var dictionary = (function(){
 		$nodeContextMenu.find('#add-to-new-group span.item-text').html(get('NewGroup'));
 
 		var $groupContextMenu = $('#groupContextMenu');
+		$groupContextMenu.find('#details-group span.item-text').hmtl(get('ShowInfo'));
 		$groupContextMenu.find('#edit-group span.item-text').html(get('Edit'));
 		$groupContextMenu.find('#delete span.item-text').html(get('Delete'));
 		$groupContextMenu.find('#center-selection span.item-text').html(get('CenterSelection'));
