@@ -1,7 +1,13 @@
 // remove shortcut if it is a touch device
-var isTouchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window; // cd1 works on most browsers || cd2 works on IE10/11 and Surface
+var isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0; 
+//  'ontouchstart' in window works on most browsers 
+// navigator.msMaxTouchPoints > 0 works for microsoft IE backwards compatibility
+
+var FamilyTree = familyTree(isTouchDevice);
+
 if (isTouchDevice){
-	$('.cmd-text:not(.caret-right)').addClass('hidden');
+	$('.cmd-text:not(.caret-right),#selection-area-item').addClass('hidden');
+	$('#details-node,#details-group').removeClass('hidden');
 }
 
 var viewport = document.getElementById('viewport');
@@ -15,31 +21,31 @@ function onResize(){
 	h -= top;
 	w -= left;
 
-	familyTree.resize(w, h);
+	FamilyTree.resize(w, h);
 };
 
 function undo(){
-	familyTree.undo();
+	FamilyTree.undo();
 };
 
 function redo(){
-	familyTree.redo();
+	FamilyTree.redo();
 };
 
 function selectAll(){
-	familyTree.selectAll();
-	familyTree.centerAll();
+	FamilyTree.selectAll();
+	FamilyTree.centerAll();
 };
 
 function deleteElements(){
-	var objects = familyTree.getObjectsToDelete();
-	familyTree.deleteObjects(
+	var objects = FamilyTree.getObjectsToDelete();
+	FamilyTree.deleteObjects(
 		objects.nodes, 
 		objects.relLinks, 
 		objects.childLinks, 
-		function(){ familyTree.draw(); }, 
-		function(){ familyTree.draw(); }, 
-		function(){ familyTree.draw(); }
+		function(){ FamilyTree.draw(); }, 
+		function(){ FamilyTree.draw(); }, 
+		function(){ FamilyTree.draw(); }
 	);
 };
 
@@ -63,22 +69,22 @@ if (!isTouchDevice){
 				h = this.clientHeight;
 
 			// Area Selection
-			if ((d3.event.shiftKey) && (!familyTree.getBrushLayer())) {
-				familyTree.startBrush();
+			if ((d3.event.shiftKey) && (!FamilyTree.getBrushLayer())) {
+				FamilyTree.startBrush();
 			}
 			// Center selection 
 			else if (d3.event.keyCode == Keys.S) {
-				familyTree.centerSelection();
+				FamilyTree.centerSelection();
 			}
 			
 			// Center all tree
 			else if (d3.event.keyCode == Keys.E) {
-				familyTree.centerAll();
+				FamilyTree.centerAll();
 			}
 
 			// delete nodes and/or links
 			else if (d3.event.keyCode == Keys.DELETE) {
-				familyTree.hideContextMenus();
+				FamilyTree.hideContextMenus();
 				deleteElements();
 			}
 				
@@ -86,7 +92,7 @@ if (!isTouchDevice){
 				// Select all tree
 				if (d3.event.keyCode == Keys.A) {
 					d3.event.preventDefault();
-					familyTree.hideContextMenus();
+					FamilyTree.hideContextMenus();
 					selectAll();
 				} 
 
@@ -103,19 +109,20 @@ if (!isTouchDevice){
 			if (d3.event.target.tagName.toLowerCase() == 'input')
 				return;
 
-			if (!d3.event.shiftKey && familyTree.isMovingBrush())
-				familyTree.endBrush();
+			if (!d3.event.shiftKey && FamilyTree.isMovingBrush())
+				FamilyTree.endBrush();
 		});
 }
 
 document.body.onresize = onResize;
 	
-familyTree.init(viewport, document.body.clientWidth, document.body.clientHeight);
+FamilyTree.init(viewport, document.body.clientWidth, document.body.clientHeight);
 onResize();
 
 var eventStart = isTouchDevice ? 'touchstart' : 'click';
 
-var treeNameItem = $('#loaded-tree-name'),
+var mainCollapsableNavbar = $('#main-navbar-collapse'),
+	treeNameItem = $('#loaded-tree-name'),
 	alertPopup = $('#alert-popup'),
 	openFilePopup = $('#open-file-popup'),
 	saveAsPopup = $('#save-as-popup'),
@@ -128,16 +135,12 @@ var treeNameItem = $('#loaded-tree-name'),
 	centerSelItem = $('#center-selection-item'),
 	extendItem = $('#extend-item');
 
-$('nav').on(eventStart, function(){
-	//familyTree.hideContextMenus();
-});
-
 $('#search-btn').on(eventStart, function(e){
 	e.preventDefault();
 	var records = seachField.serializeArray(),
 		values = {};
 	records.forEach(function(rec){values[rec.name] = rec.value;});
-	familyTree.search(values);
+	FamilyTree.search(values);
 });
 
 saveAsPopup.on("hide.bs.modal", function () {
@@ -152,7 +155,10 @@ $('#new-item').on(eventStart, function(){
 		alertPopup.isLoadingNewTree = true;
 	} else {
 		treeNameItem.html(dictionary.get('Default')).removeClass('modified');
-		familyTree.load();
+		FamilyTree.load();
+	}
+	if (isTouchDevice){
+		mainCollapsableNavbar.collapse('toggle');
 	}
 });
 
@@ -167,7 +173,7 @@ openFilePopup.on("hide.bs.modal", function () {
 
 openFilePopup.find('#upload-file-btn').on(eventStart, function(){
 	if (fileContent)
-		familyTree.load(JSON.parse(fileContent));
+		FamilyTree.load(JSON.parse(fileContent));
 	openFilePopup.modal('hide');	
 });
 
@@ -194,7 +200,7 @@ alertPopup.find('#no').on(eventStart, function(){
 	alertPopup.modal('hide');
 	if (alertPopup.isLoadingNewTree){
 		alertPopup.isLoadingNewTree = false;
-		familyTree.load();
+		FamilyTree.load();
 		treeNameItem.html(dictionary.get('Default'));
 	} else if (alertPopup.isOpeningTree){
 		alertPopup.isOpeningTree = false;
@@ -202,13 +208,22 @@ alertPopup.find('#no').on(eventStart, function(){
 	} 
 });
 
-$('#open-item').on(eventStart, function(){
+function showOpenFilePopup (){
 	if (!undoMenuItem.hasClass('disabled')){
 		alertPopup.modal();		
 		alertPopup.isOpeningTree = true;
-	}
-	else 
+	} else 
 		openFilePopup.modal();
+};
+
+$('#open-item').on(eventStart, function(){	
+	if (isTouchDevice){
+		mainCollapsableNavbar.collapse('toggle');
+		mainCollapsableNavbar.one('hidden.bs.collapse', function(){
+			showOpenFilePopup();
+		});
+	} else 
+		showOpenFilePopup();
 });
 
 saveAsPopup.find('.btn-group[data-toggle-name]').each(function () {
@@ -227,12 +242,18 @@ saveAsPopup.find('.btn-group[data-toggle-name]').each(function () {
     });
 });
 
-$('#save-as-item').on(eventStart, function(){
-	saveAsPopup.modal();
+$('#save-as-item').on(eventStart, function(){	
+	if (isTouchDevice){
+		mainCollapsableNavbar.collapse('toggle');
+		mainCollapsableNavbar.one('hidden.bs.collapse', function(){
+			saveAsPopup.modal();
+		});
+	} else 
+		saveAsPopup.modal();
 });
 
 $('#save-item').on(eventStart, function(){
-	familyTree.saveAs('json', treeNameItem.html());
+	FamilyTree.saveAs('json', treeNameItem.html());
 });
 
 saveAsPopup.find("#input-format").on('change', function() {
@@ -255,7 +276,7 @@ saveAsPopup.find('#save').on(eventStart, function(){
 		values[rec.name] = rec.value;
 	});
 
-	familyTree.saveAs(values.format, values.fileName, values.scale);
+	FamilyTree.saveAs(values.format, values.fileName, values.scale);
 
 	saveAsPopup.modal('hide');
 	$('json-format-opt').trigger(eventStart);
@@ -264,7 +285,7 @@ saveAsPopup.find('#save').on(eventStart, function(){
 
 	if (alertPopup.isLoadingNewTree){
 		alertPopup.isLoadingNewTree = false;
-		familyTree.load();
+		FamilyTree.load();
 		treeNameItem.html(dictionary.get('Default'));
 	} else if (alertPopup.isOpeningTree){
 		alertPopup.isOpeningTree = false;
@@ -275,7 +296,7 @@ saveAsPopup.find('#save').on(eventStart, function(){
 
 // edit
 $('#edit-menu').on(eventStart, function (){
-	var selection = familyTree.getSelection(),
+	var selection = FamilyTree.getSelection(),
 		count = selection.length;
 	if (count)
 		deleteMenuItem.removeClass('disabled');
@@ -283,22 +304,54 @@ $('#edit-menu').on(eventStart, function (){
 		deleteMenuItem.addClass('disabled');
 });
 
-undoMenuItem.on(eventStart, undo);
+undoMenuItem.on(eventStart, function(){
+	if (isTouchDevice){
+		mainCollapsableNavbar.collapse('toggle');
+		mainCollapsableNavbar.one('hidden.bs.collapse', function(){
+			undo();
+		});
+	} else 
+		undo();
+});
 
-redoMenuItem.on(eventStart, redo);
+redoMenuItem.on(eventStart, function(){
+	if (isTouchDevice){
+		mainCollapsableNavbar.collapse('toggle');
+		mainCollapsableNavbar.one('hidden.bs.collapse', function(){
+			redo();
+		});
+	} else 
+		redo();
+});
 
-deleteMenuItem.on(eventStart, deleteElements);
+deleteMenuItem.on(eventStart, function(){
+	if (isTouchDevice){
+		mainCollapsableNavbar.collapse('toggle');
+		mainCollapsableNavbar.one('hidden.bs.collapse', function(){
+			deleteElements();
+		});
+	} else 
+		deleteElements();
+});
 
-$('#select-all-item').on(eventStart, selectAll);
+$('#select-all-item').on(eventStart, function(){
+	if (isTouchDevice){
+		mainCollapsableNavbar.collapse('toggle');
+		mainCollapsableNavbar.one('hidden.bs.collapse', function(){
+			selectAll();
+		});
+	} else 
+		selectAll();
+});
 
 $('#selection-area-item').on(eventStart, function(){
-	if (!isTouchDevice && !familyTree.getBrushLayer()) 
-		familyTree.startBrush();
+	if (!isTouchDevice && !FamilyTree.getBrushLayer()) 
+		FamilyTree.startBrush();
 });
 
 //view
 $('#view-menu').on(eventStart, function(){
-	var count = familyTree.getSelection().length;
+	var count = FamilyTree.getSelection().length;
 	if (count)
 		centerSelItem.removeClass('disabled');
 	else
@@ -306,11 +359,28 @@ $('#view-menu').on(eventStart, function(){
 });
 
 centerSelItem.on(eventStart, function(){
-	familyTree.centerSelection();
+	if (isTouchDevice){
+		mainCollapsableNavbar.collapse('toggle');
+		mainCollapsableNavbar.one('hidden.bs.collapse', function(){
+			FamilyTree.centerSelection();
+		});
+	} else 
+		FamilyTree.centerSelection();
 });
 
 extendItem.on(eventStart, function(){
-	familyTree.centerAll();
+	if (isTouchDevice){
+		mainCollapsableNavbar.collapse('toggle');
+		mainCollapsableNavbar.one('hidden.bs.collapse', function(){
+			FamilyTree.centerAll();
+		});
+	} else 
+		FamilyTree.centerAll();
+});
+
+// hide all visible context menus when clicking or touching a navigation bar 
+$('.navbar').on(eventStart, function(e) {
+	FamilyTree.hideContextMenus();
 });
 
 // language
@@ -327,24 +397,8 @@ langMenu.parent().find('li').each(function(){
  	});
 });	
 
-$('#main-navbar-collapse').on(eventStart, function(e) {
-	familyTree.hideContextMenus();
-});
-/*
 $('#viewport').on(eventStart, function(){
-	$('nav a[aria-expanded=true]').collapse('hide');
-	if (isTouchDevice){
-		var navbar = $("#main-navbar-collapse");
-		if (navbar.is(":visible"))
-			navbar.collapse('toggle');
-	}
-})
-*/
-$(document).on(eventStart, '#main-navbar-collapse', function(e) {
-	var $target = $(e.target);
-    if($target.is('a') && $target.attr('class') != 'dropdown-toggle' )
-    	$(this).collapse('hide');
-    familyTree.hideContextMenus();
+	$('.dropdown.open').trigger(eventStart);
 });
 
 $(document).on('action', function(ev, action, undoCounter, redoCounter){
