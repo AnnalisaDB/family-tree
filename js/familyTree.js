@@ -1,4 +1,4 @@
-var familyTree = (function (isTouchDevice){
+var familyTree = function (isTouchDevice){
 	var dataNodes = [];
 	var dataRelLinks = [];
 	var dataChildLinks = [];
@@ -46,8 +46,8 @@ var familyTree = (function (isTouchDevice){
 		isMultiSelection = false;
 	
 	var HistoryManager = actionHistory();
-	var TooltipManager = tooltipManager();
-	var CtxMenuManager = contextMenuManager();
+	var TooltipManager = tooltipManager(isTouchDevice);
+	var CtxMenuManager = contextMenuManager(isTouchDevice);
 	
 	// private methods
 	function _getViewport(nodes, groups){
@@ -1107,7 +1107,7 @@ var familyTree = (function (isTouchDevice){
 
     	var openGroupCtxMenuDots = d3selection.select('.open-context-menu');
     	if (!openGroupCtxMenuDots.empty())
-    		openGroupCtxMenuDots.attr('transform', 'translate('+ (w - 2 * dotRadius) + ', 0)');
+    		openGroupCtxMenuDots.attr('transform', 'translate('+ (w - 2 * dotRadius) + ', 0) scale(' + currentScale + ')');
     				
     	d3selection.select('.group-textarea').attr('transform', 'translate(' + p[0] + ',' + p[1] +')');
 	};
@@ -3091,6 +3091,9 @@ var familyTree = (function (isTouchDevice){
 
     			deleteObjects(nodes, rLinks, cLinks, groups);
 			},
+			showInfo: function(){
+				console.log('show details')
+			},
 			editNode: function(){
 				$('#node-popup').modal();
 			},
@@ -3137,6 +3140,9 @@ var familyTree = (function (isTouchDevice){
 				});
 
     			deleteObjects(nodes, rLinks, cLinks, groups);
+			},
+			showInfo: function(){
+				console.log('show details')
 			},
 			centerSelection: function(){
 				centerSelection();
@@ -3255,11 +3261,11 @@ var familyTree = (function (isTouchDevice){
 		var submitEvent = (isTouchDevice) ? 'touchstart' : 'click';
 		var popup = $('#node-popup');
 		if (popup){
-			popup.on(submitEvent, '#submit', null);
+			popup.off(submitEvent, '#submit');
 		}
 		var gpopup = $('#group-popup');
 		if (gpopup){
-		 	gpopup.on(submitEvent, '#submit', null);
+		 	gpopup.off(submitEvent, '#submit');
 		}
 	};
 
@@ -3351,11 +3357,6 @@ var familyTree = (function (isTouchDevice){
     };
 	
 	var centerSelection = function () {
-		if (isTouchDevice){
-			var navbar = $("#main-navbar-collapse");
-			if (navbar.is(":visible"))
-				navbar.collapse('toggle');
-		}
 		CtxMenuManager.hide();
 		var groups = dataGroups.filter(function(group){return group.selected == true;}),
 			nodes = dataNodes.filter(function(node){return node.selected == true;}),
@@ -3373,11 +3374,6 @@ var familyTree = (function (isTouchDevice){
 	};
 	
 	var centerAll = function () {
-		if (isTouchDevice){
-			var navbar = $("#main-navbar-collapse");
-			if (navbar.is(":visible"))
-				navbar.collapse('toggle');
-		}
 		CtxMenuManager.hide();
 		centerTo(dataNodes, dataGroups, 500);
 	};
@@ -3791,4 +3787,4 @@ var familyTree = (function (isTouchDevice){
 		enableMultiSelection: function(){ isMultiSelection = true; },
 		disableMultiSelection: function(){ isMultiSelection = false; }
 	};
-})('ontouchstart' in window || 'onmsgesturechange' in window); // cd1 works on most browsers || cd2 works on IE10/11 and Surface
+};
