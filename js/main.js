@@ -157,7 +157,7 @@ $('#new-item').on(eventStart, function(){
 		treeNameItem.html(dictionary.get('Default')).removeClass('modified');
 		FamilyTree.load();
 	}
-	if (isTouchDevice){
+	if (isTouchDevice && mainCollapsableNavbar.is(':visible')){
 		mainCollapsableNavbar.collapse('toggle');
 	}
 });
@@ -217,7 +217,7 @@ function showOpenFilePopup (){
 };
 
 $('#open-item').on(eventStart, function(){	
-	if (isTouchDevice){
+	if (isTouchDevice && mainCollapsableNavbar.is(':visible')){
 		mainCollapsableNavbar.collapse('toggle');
 		mainCollapsableNavbar.one('hidden.bs.collapse', function(){
 			showOpenFilePopup();
@@ -243,7 +243,7 @@ saveAsPopup.find('.btn-group[data-toggle-name]').each(function () {
 });
 
 $('#save-as-item').on(eventStart, function(){	
-	if (isTouchDevice){
+	if (isTouchDevice && mainCollapsableNavbar.is(':visible')){
 		mainCollapsableNavbar.collapse('toggle');
 		mainCollapsableNavbar.one('hidden.bs.collapse', function(){
 			saveAsPopup.modal();
@@ -305,7 +305,7 @@ $('#edit-menu').on(eventStart, function (){
 });
 
 undoMenuItem.on(eventStart, function(){
-	if (isTouchDevice){
+	if (isTouchDevice && mainCollapsableNavbar.is(':visible')){
 		mainCollapsableNavbar.collapse('toggle');
 		mainCollapsableNavbar.one('hidden.bs.collapse', function(){
 			undo();
@@ -315,7 +315,7 @@ undoMenuItem.on(eventStart, function(){
 });
 
 redoMenuItem.on(eventStart, function(){
-	if (isTouchDevice){
+	if (isTouchDevice && mainCollapsableNavbar.is(':visible')){
 		mainCollapsableNavbar.collapse('toggle');
 		mainCollapsableNavbar.one('hidden.bs.collapse', function(){
 			redo();
@@ -325,7 +325,7 @@ redoMenuItem.on(eventStart, function(){
 });
 
 deleteMenuItem.on(eventStart, function(){
-	if (isTouchDevice){
+	if (isTouchDevice && mainCollapsableNavbar.is(':visible')){
 		mainCollapsableNavbar.collapse('toggle');
 		mainCollapsableNavbar.one('hidden.bs.collapse', function(){
 			deleteElements();
@@ -335,7 +335,7 @@ deleteMenuItem.on(eventStart, function(){
 });
 
 $('#select-all-item').on(eventStart, function(){
-	if (isTouchDevice){
+	if (isTouchDevice && mainCollapsableNavbar.is(':visible')){
 		mainCollapsableNavbar.collapse('toggle');
 		mainCollapsableNavbar.one('hidden.bs.collapse', function(){
 			selectAll();
@@ -359,7 +359,7 @@ $('#view-menu').on(eventStart, function(){
 });
 
 centerSelItem.on(eventStart, function(){
-	if (isTouchDevice){
+	if (isTouchDevice && mainCollapsableNavbar.is(':visible')){
 		mainCollapsableNavbar.collapse('toggle');
 		mainCollapsableNavbar.one('hidden.bs.collapse', function(){
 			FamilyTree.centerSelection();
@@ -369,7 +369,7 @@ centerSelItem.on(eventStart, function(){
 });
 
 extendItem.on(eventStart, function(){
-	if (isTouchDevice){
+	if (isTouchDevice && mainCollapsableNavbar.is(':visible')){
 		mainCollapsableNavbar.collapse('toggle');
 		mainCollapsableNavbar.one('hidden.bs.collapse', function(){
 			FamilyTree.centerAll();
