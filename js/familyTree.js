@@ -2861,10 +2861,18 @@ var familyTree = function (isTouchDevice){
 			.on('dblclick.zoom', null);
 		
 		if (isTouchDevice){
-			panArea.on('touchstart', function () {
-				CtxMenuManager.hide();
-				deselectAll();
-			});
+			var isLikeClickEvent = false;
+			panArea
+				.on('touchstart', function () {
+					CtxMenuManager.hide();
+					isLikeClickEvent = true;
+				}).on('touchmove', function () {
+					isLikeClickEvent = false;
+				}).on('touchend', function () {
+					if (isLikeClickEvent)
+						deselectAll();
+					isLikeClickEvent = false;
+				});
 		} else {
 			panArea
 				.on('mousedown', function () {
@@ -3002,8 +3010,14 @@ var familyTree = function (isTouchDevice){
 
     			deleteObjects(nodes, rLinks, cLinks, groups);
 			},
-			showInfo: function(){
-				console.log('show details')
+			showInfo: function(nodeId){
+				var node = getNodeById(nodeId);
+				if (node){
+					var w = +svg.attr('width'),
+						h = +svg.attr('height');
+					TooltipManager.show(node);
+					TooltipManager.setPosition([w - dotRadius, dotRadius], w, h);
+				}
 			},
 			editNode: function(){
 				$('#node-popup').modal();
@@ -3052,8 +3066,10 @@ var familyTree = function (isTouchDevice){
 
     			deleteObjects(nodes, rLinks, cLinks, groups);
 			},
-			showInfo: function(){
-				console.log('show details')
+			showInfo: function(groupId){
+				var group = getGroupById(groupId);
+				if (group)
+					TooltipManager.show(group);
 			},
 			centerSelection: function(){
 				centerSelection();
