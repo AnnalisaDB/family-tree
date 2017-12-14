@@ -65,8 +65,16 @@ var contextMenuManager = function(isTouchDevice){
 						applyCallbacks.editNewObject(type, left, top);
 
 					var popup = $('#' + type + '-popup');
-					if (popup.length !== 0)
-						popup.modal();
+					if (popup.length !== 0) {
+						var mainCollapsableNavbar = $('#main-navbar-collapse');
+						if (isTouchDevice && mainCollapsableNavbar.is(':visible')){
+							mainCollapsableNavbar.collapse('toggle');
+							mainCollapsableNavbar.one('hidden.bs.collapse', function(){
+								popup.modal();
+							});
+						} else 
+							popup.modal();
+					}
 				}
 				else if (id == 'select-all' && applyCallbacks.selectAll)
 					applyCallbacks.selectAll();
@@ -118,7 +126,7 @@ var contextMenuManager = function(isTouchDevice){
 				else if (id == 'center-all' && applyCallbacks.centerAll)
 					applyCallbacks.centerAll();
 				else if (id == 'details-group' && applyCallbacks.showInfo)
-					applyCallbacks.showInfo()
+					applyCallbacks.showInfo(groupCtxMenu.groupId)
 				
 				groupCtxMenu.hide();
 			});
@@ -138,6 +146,7 @@ var contextMenuManager = function(isTouchDevice){
 		var getSelectionCount = cfg.getSelectionCount;
 
 		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(group){
+			nodeCtxMenu.groupId = group.id;
 			d3.event.preventDefault();
 			var p = _getPosition(d3.event);
 			var x = p[0], y = p[1];
@@ -190,7 +199,7 @@ var contextMenuManager = function(isTouchDevice){
 				if (id == 'delete' && applyCallbacks.delete)
 					applyCallbacks.delete();
 				else if (id == 'details-node' && applyCallbacks.showInfo)
-					applyCallbacks.showInfo();
+					applyCallbacks.showInfo(nodeCtxMenu.nodeId);
 				else if (id == 'edit-node' && applyCallbacks.editNode)
 					applyCallbacks.editNode()
 				else if (id == 'center-selection' && applyCallbacks.centerSelection)
@@ -376,6 +385,7 @@ var contextMenuManager = function(isTouchDevice){
 		var updateItems = cfg.updateItems;
 
 		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(node){
+			nodeCtxMenu.nodeId = node.id;
 			d3.event.preventDefault();
 			var p = _getPosition(d3.event);
 			var x = p[0], y = p[1];
@@ -450,10 +460,14 @@ var contextMenuManager = function(isTouchDevice){
 	function hide(){
 		if (bgCtxMenu)
 			bgCtxMenu.hide();
-		if (nodeCtxMenu)
+		if (nodeCtxMenu){
 			nodeCtxMenu.hide();
-		if (groupCtxMenu)
+			nodeCtxMenu.nodeId = null;
+		}
+		if (groupCtxMenu){
 			groupCtxMenu.hide();
+			groupCtxMenu.groupId = null;
+		}
 	}
 
 	return {
