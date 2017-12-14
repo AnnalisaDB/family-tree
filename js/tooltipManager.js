@@ -41,13 +41,10 @@ var tooltipManager = function(isTouchDevice){
         if (!tooltip || tooltip.empty())
             return;
 
-        if (_isHidden())
-            return;
-
         var tooltipDom = tooltip.node();
         var w_tooltip = tooltipDom.offsetWidth,
             h_tooltip = tooltipDom.offsetHeight,
-            padding = 16, x0, y0;
+            padding = isTouchDevice ? 0 : 16, x0, y0;
             
         var x0 = pos[0] + padding;
         var y0 = pos[1] + h_tooltip + padding;
@@ -66,6 +63,8 @@ var tooltipManager = function(isTouchDevice){
             return;
 		tooltip.transition().duration(withTransition).style('opacity', 0);
 		tooltipData = null;
+        if (isTouchDevice)
+            tooltip.style('pointer-events', 'none');
     };
 
     function show(data) {
@@ -73,6 +72,9 @@ var tooltipManager = function(isTouchDevice){
 
         _update(data);
         tooltip.transition().duration(100).style('opacity', 0.85);
+
+        if (isTouchDevice)
+            tooltip.style('pointer-events', 'all');
     };
 
     function _update(data){
