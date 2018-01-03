@@ -43,6 +43,7 @@ var familyTree = function (isTouchDevice){
 		isResizingGroup = null;
 	
 	var dotRadius = 3,
+
 		isMultiSelection = false;
 	
 	var HistoryManager = actionHistory();
@@ -53,11 +54,27 @@ var familyTree = function (isTouchDevice){
 	function _getViewport(nodes, groups){
 		var nViewport = _getNodesViewport(nodes),
 			gViewport = _getGroupsViewport(groups);
+		
+		var canvasInfo = null;
+		
+		if (!gViewport && !nViewport){
+			canvasInfo = {
+				padding: 0,
+				xRange: xScale.domain(),
+				yRange: yScale.domain()
+			};
+            canvasInfo.w = canvasInfo.xRange[1] - canvasInfo.xRange[0];            
+            canvasInfo.h = canvasInfo.yRange[1] - canvasInfo.yRange[0];
+            return canvasInfo;
+		}
 
-		if (!gViewport)
+		if (gViewport && !nViewport)
+			return gViewport;
+
+		if (!gViewport && nViewport)
 			return nViewport;
 
-		var canvasInfo = {        
+		canvasInfo = {        
 			xRange : [
 				Math.min(nViewport.xRange[0], gViewport.xRange[0]),
 				Math.max(nViewport.xRange[1], gViewport.xRange[1])
@@ -81,13 +98,9 @@ var familyTree = function (isTouchDevice){
 	function _getNodesViewport(nodes){
 		nodes = nodes || [];
 		var canvasInfo = {};
-        if (!nodes.length) {
-            canvasInfo.padding = 0;
-            canvasInfo.xRange = xScale.domain();
-            canvasInfo.yRange = yScale.domain();
-            canvasInfo.w = canvasInfo.xRange[1] - canvasInfo.xRange[0];            
-            canvasInfo.h = canvasInfo.yRange[1] - canvasInfo.yRange[0];
-        } else {
+		if (!nodes.length){
+			canvasInfo = null;
+		} else {
             canvasInfo.xRange = [
                 d3.min(nodes, function (d) { return d.x; }),
                 d3.max(nodes, function (d) { return d.x + nodeWidth; })
@@ -113,6 +126,7 @@ var familyTree = function (isTouchDevice){
         if (!groups.length) {
             canvasInfo = null;
         } else {
+            // textareas range
             canvasInfo.xRange = [
                 d3.min(groups, function (d) { return d.x; }) ,
                 d3.max(groups, function (d) { return d.x + d.width; })
@@ -121,6 +135,22 @@ var familyTree = function (isTouchDevice){
                 d3.min(groups, function (d) { return d.y; }),
                	d3.max(groups, function (d) { return d.y + d.height; })
             ];
+
+            var nodes = [];
+            groups.forEach(function(group){
+            	group.nodes.forEach(function(nodeId){
+            		var node = getNodeById(nodeId);
+            		if (node && nodes.indexOf(node) == -1)
+            			nodes.push(node);
+            	})
+            });
+
+            if (nodes.length){
+            	canvasInfo.xRange[0] = Math.min(canvasInfo.xRange[0], d3.min(nodes, function (d) { return d.x; }));
+            	canvasInfo.xRange[1] = Math.max(canvasInfo.xRange[1], d3.max(nodes, function (d) { return d.x + nodeWidth; }));
+	            canvasInfo.yRange[0] = Math.min(canvasInfo.yRange[0], d3.min(nodes, function (d) { return d.y; }));
+	            canvasInfo.yRange[1] = Math.max(canvasInfo.yRange[1], d3.max(nodes, function (d) { return d.y + nodeHeight; }));
+            }
 
             canvasInfo.w = canvasInfo.xRange[1] - canvasInfo.xRange[0];
             canvasInfo.h = canvasInfo.yRange[1] - canvasInfo.yRange[0];
@@ -143,7 +173,7 @@ var familyTree = function (isTouchDevice){
             t = d3.event.translate, 
             s = d3.event.scale;
 
-        if (dataNodes.length) {
+        if (dataNodes.length || dataGroups.length) {
             var canvasInfo = _getViewport(dataNodes, dataGroups);
             var t = d3.event.translate;
             currentScale = d3.event.scale;
@@ -800,7 +830,7 @@ var familyTree = function (isTouchDevice){
 			}
 		};
 
-	/*	if (isTouchDevice){
+		if (isTouchDevice){
 			textarea
 	            .on('touchstart', onTouchStartGroup)
 				.on('touchend', onTouchEndGroup);
@@ -815,7 +845,7 @@ var familyTree = function (isTouchDevice){
 				}
 			});
 		} else {
-	*/		// Add event listeners
+			// Add event listeners
 			CtxMenuManager.onRightClick('group', textarea, svg, { 
 				getSelectionCount: function(){
 					var count = dataNodes.filter(function(n){return n.selected;}).length;
@@ -831,7 +861,7 @@ var familyTree = function (isTouchDevice){
 				.on('click', onClickGroup)
 	            .on('mouseover', onMouseOverGroup)
 	            .on('mouseout', onMouseOutGroup);
-      //  }
+        }
 
         textarea.call(
         	d3.behavior.drag()
@@ -987,11 +1017,20 @@ var familyTree = function (isTouchDevice){
 			var node = getNodeById(nId);
 			if (node) nodes.push(node);
 		});
+
+		var x0, x1, y0, y1;
 		var canvasInfo = _getNodesViewport(nodes);
-		var x0 = xs(canvasInfo.xRange[0] - groupPadding),
-			x1 = xs(canvasInfo.xRange[1] + groupPadding),
-			y0 = ys(canvasInfo.yRange[0] - groupPadding),
+		if (!canvasInfo){
+			x0 = xs(g.x);
+			x1 = xs(g.x);
+			y0 = ys(g.y);
+			y1 = ys(g.y);
+		} else {
+			x0 = xs(canvasInfo.xRange[0] - groupPadding);
+			x1 = xs(canvasInfo.xRange[1] + groupPadding);
+			y0 = ys(canvasInfo.yRange[0] - groupPadding);
 			y1 = ys(canvasInfo.yRange[1] + groupPadding);
+		}
 		
 		d3selection.select('.group-area').classed('hidden', !g.nodes || !g.nodes.length)
 			.attr('points', x0 + ',' + y0 + ' ' + x1 + ',' + y0 + ' ' + x1 + ',' + y1 + ' ' + x0 + ',' + y1 + ' ' + x0 + ',' + y0)
@@ -2262,48 +2301,8 @@ var familyTree = function (isTouchDevice){
     	};
     	dataGroups.push(group);
 
-    	var groupsList = [];
-		dataGroups.forEach(function(g){
-			groupsList.push({id: g.id, text: g.text});
-		});
-	
-		groupsList.sort(function(a, b) {
-			var tA = a.text.toUpperCase(); // ignore upper and loadd-to-new-groupwercase
-			var tB = b.text.toUpperCase(); // ignore upper and lowercase
-			if (tA < tB) return -1;
-			if (tA > tB) return 1;
-			// texts must be equal
-			return 0;
-		});
-		
-		var lastEl = $('#add-to-new-group').parent('li'),
-			menu = lastEl.parents('.dropdown-submenu').find('.dropdown-menu');
-			
-		menu.find('.existing-group,.divider').each(function(){$(this).remove()});
-		if (groupsList.length){
-			groupsList.forEach(function(g){
-				var text = g.text.split(/\r\n|\r|\n/),
-					li = '<li class="existing-group"><a tabindex="-1" href="#" id="add-to-existing-group-' + g.id + '">';
-				li += text[0];
-				if (text.length > 1) 
-					li += '...</a></li>';
-				lastEl.before(li);
-			});
-			lastEl.before('<li class="divider"></li>');
-			menu.on('click', '.existing-group a', function(){
-				var el = this,
-					$el = $(this),
-					id = $el.attr('id').substring(22);
-				while (el && el.className.indexOf('dropdown-menu') == -1)
-					el = el.parentNode;
-				if (el)
-					$(el).hide();
-				//CtxMenuManager.getContextMenu('node').hide();
-				var g = getGroupById(id),
-					nodesToAdd = dataNodes.filter(function(n){return n.selected == true && g.nodes.indexOf(n.id) == -1;});
-				addNodesTo(nodesToAdd, g);
-			})
-		}
+    	 _updateAddToGroupsItem();
+		_updateRemoveFromGroupsItem();
 
     	return group;
     };
@@ -3241,8 +3240,8 @@ var familyTree = function (isTouchDevice){
         if (!svg || svg.empty())
 			return;	
 
-        // nodes is a subset of dataNodes
-        if (!dataNodes || !dataNodes.length) {
+        // nodes is a subset of dataNodes as well as groups is a subset of dataGroups
+        if ((!dataNodes || !dataNodes.length) && (!dataGroups || !dataGroups.length)) {
             zoom.scale(maxScale).translate([0, 0]);
             currentScale = maxScale;
             update(transitionDuration);
