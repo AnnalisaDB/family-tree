@@ -208,10 +208,12 @@ var contextMenuManager = function(isTouchDevice){
 					applyCallbacks.centerAll();
 				else if (id == 'link-to-partner' && applyCallbacks.linkToPartner)
 					applyCallbacks.linkToPartner();
-				/*else if (id == 'add-to-group'){
+				else if (id == 'add-to-group' || id == 'remove-from-group'){
+					if (isTouchDevice)
+						return;
 					event.stopPropagation();
 					event.preventDefault();
-				} */else if ((id == 'add-to-new-group' || id.indexOf('add-to-existing-group-') != -1) || 
+				} else if ((id == 'add-to-new-group' || id.indexOf('add-to-existing-group-') != -1) || 
 						(id == 'remove-from-group' || id.indexOf('remove-from-existing-group-') != -1)){
 					var el = this;
 					while (el && el.className.indexOf('dropdown-menu') == -1)
@@ -230,13 +232,19 @@ var contextMenuManager = function(isTouchDevice){
 			});
 
 			var groupsListItems = nodeCtxMenu.find('#add-to-group, #remove-from-group');
-			groupsListItems.on(isTouchDevice ? 'touchstart': 'mouseover', function(){
+
+			if (isTouchDevice){
+				groupsListItems.on('touchstart', function() {
+					var id = $(this).attr('id');
+					console.log(id)
+				});
+			} else {
+				groupsListItems.on('mouseover', function(){
 					var groupsListMenu = $(this).next('ul');
 					groupsListMenu.show();
 					_updateGroupsListPosition(groupsListMenu);
 				});
 
-			if (!isTouchDevice)
 				groupsListItems.on('mouseout', function(ev){
 					var el = ev.toElement;
 					var ul = $(this).next('ul');
@@ -245,6 +253,7 @@ var contextMenuManager = function(isTouchDevice){
 					if (!el)
 						ul.hide();
 				});
+			}
 		}
 	};
 
