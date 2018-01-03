@@ -259,6 +259,20 @@ nav.tree-name .navbar-brand #loaded-tree-name.modified:hover {
   background-color: #080808;
   color: #fff;
 }
+nav .open>.dropdown-menu {
+  -webkit-transform: scale(1, 1);
+  transform: scale(1, 1);   
+}
+nav .dropdown-menu {
+  -webkit-transform-origin: top;
+  transform-origin: top;
+  -webkit-animation-fill-mode: forwards;  
+  animation-fill-mode: forwards; 
+  -webkit-transform: scale(1, 0);
+  display: block;  
+  transition: all 0.2s ease-out;
+  -webkit-transition: all 0.2s ease-out;
+}
 .dropdown-submenu {
     position: relative;
 }
