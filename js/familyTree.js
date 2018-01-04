@@ -167,7 +167,7 @@ var familyTree = function (isTouchDevice){
 		
 		if (!svg || svg.empty())
 			return;
-		
+
 		var w = parseInt(svg.attr('width')),
             h = parseInt(svg.attr('height')),
             t = d3.event.translate, 
@@ -788,7 +788,7 @@ var familyTree = function (isTouchDevice){
     			touchingDOM = touchingDOM.parentNode;
     		if (!touchingDOM || !touchingDOM.classList.contains('open-context-menu'))
     			CtxMenuManager.hide();
-    		
+
 			// select it if not
 			if (!g.selected){
 				deselectAll();
@@ -807,6 +807,9 @@ var familyTree = function (isTouchDevice){
 		function onMouseOverGroup(g){
         	groupOver = g;
 
+        	if (isResizingGroup == g)
+        		return;
+
             d3.select(this).selectAll('.resizers').classed('hidden', false);
             // show tooltip if nodes are too small or they have partial texts
 			var maxScale = g.textSize || 14;
@@ -817,10 +820,13 @@ var familyTree = function (isTouchDevice){
         };
 
         function onMouseOutGroup(g){
-            d3.select(this).selectAll('.resizers').classed('hidden', true);
-            // hide tooltip
+        	// hide tooltip
             groupOver = null;
 			TooltipManager.hide(200);
+
+        	if (isResizingGroup == g)
+        		return;
+            d3.select(this).selectAll('.resizers').classed('hidden', true);
         };
 
 		function onMouseDownGroup(g){
@@ -1632,12 +1638,13 @@ var familyTree = function (isTouchDevice){
 	var posB4Drag;
 
 	function onStartToMoveGroups (group) {
-		if (d3.select(d3.event.sourceEvent.target).classed('resizer')){
+		var sourceEvent = d3.event.sourceEvent;
+		if (sourceEvent.target.classList.contains('resizer')){
 			onStartToResizeGroup(group);
 			return;
 		}
 
-		d3.event.sourceEvent.stopPropagation();
+		sourceEvent.stopPropagation();
         var selection = dataGroups.filter(function(group){return group.selected;});
         selection.forEach(function (group) {
             group.lastX = group.x;
@@ -1649,7 +1656,7 @@ var familyTree = function (isTouchDevice){
 	
     function onMovingGroups (group) {
     	if (isResizingGroup == group){
-    		onResizingGroup(group);
+    		onResizingGroup(isResizingGroup);
 			return;
     	}
         var posOnDrag = isTouchDevice ? d3.touch(svg.node()) : d3.mouse(svg.node());
@@ -1774,6 +1781,11 @@ var familyTree = function (isTouchDevice){
         group.oldWidth = group.width;
         group.oldHeight = group.height;
         isResizingGroup = group;
+
+        // disable zoom behaviour
+        svg.selectAll('rect.zoom-pan-area, .children-links, .relationship-links, .nodes, .groups')
+        	.on('.zoom', null);
+        
         var d3group = getD3Group(group);
         d3group.select('.resizers').classed('hidden', false);
     };
@@ -1803,6 +1815,7 @@ var familyTree = function (isTouchDevice){
         	right = group.x + group.width,
         	bottom = group.y + group.height;
 
+        
         var speed = 5;
         if (xRange[1] < right)
 			t.x = -speed;
@@ -1814,6 +1827,10 @@ var familyTree = function (isTouchDevice){
     
     function onFinishToResizeGroup(group) {
     	isResizingGroup = null;
+    	// enable zoom behaviour
+        svg.selectAll('rect.zoom-pan-area, .children-links, .relationship-links, .nodes, .groups')
+        	.call(zoom);
+
     	setTranslateSpeed(0, 0);  
         if (group.oldWidth == group.width && group.oldHeight == group.height)
             return;
