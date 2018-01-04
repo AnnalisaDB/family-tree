@@ -372,6 +372,12 @@ var familyTree = function (isTouchDevice){
 
     	// touch events
     	function onTouchStartNode(node){
+    		var touchingDOM = d3.event.target;
+    		while (touchingDOM && touchingDOM != this && !touchingDOM.classList.contains('open-context-menu'))
+    			touchingDOM = touchingDOM.parentNode;
+    		if (!touchingDOM || !touchingDOM.classList.contains('open-context-menu'))
+    			CtxMenuManager.hide();
+
     		if (node.selected){
 	    		if (isMultiSelection)
 	    			deselectNode(node);
@@ -777,6 +783,12 @@ var familyTree = function (isTouchDevice){
 
 		// touch events
     	function onTouchStartGroup(g) {
+    		var touchingDOM = d3.event.target;
+    		while (touchingDOM && touchingDOM != this && !touchingDOM.classList.contains('open-context-menu'))
+    			touchingDOM = touchingDOM.parentNode;
+    		if (!touchingDOM || !touchingDOM.classList.contains('open-context-menu'))
+    			CtxMenuManager.hide();
+    		
 			// select it if not
 			if (!g.selected){
 				deselectAll();
