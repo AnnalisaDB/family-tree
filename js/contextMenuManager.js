@@ -95,14 +95,14 @@ var contextMenuManager = function(isTouchDevice){
 			d3.event.preventDefault();
 			var p = _getPosition(d3.event);
 			var x = p[0], y = p[1];
-			
+
 			bgCtxMenu.css({
-				display: 'block',
 				left: x,
 				top: y
 			});
-
 			_setCtxMenuPosition(bgCtxMenu, x, y, d3container);
+
+			bgCtxMenu.slideDown({duration: 200});			
 		});
 	};
 
@@ -150,9 +150,7 @@ var contextMenuManager = function(isTouchDevice){
 			d3.event.preventDefault();
 			var p = _getPosition(d3.event);
 			var x = p[0], y = p[1];
-
-			groupCtxMenu.css({ display: 'block' });
-
+			
 			var popup = $('#group-popup');		
 			['text', 'width', 'height', 'textSize', 'color', 'nodes', 'id'].forEach(function(name){
 				var value = group[name];
@@ -176,6 +174,7 @@ var contextMenuManager = function(isTouchDevice){
 			});
 			
 			_setCtxMenuPosition(groupCtxMenu, x, y, d3container);
+			groupCtxMenu.slideDown({duration: 200});
 		});
 	};
 
@@ -235,13 +234,14 @@ var contextMenuManager = function(isTouchDevice){
 
 			if (isTouchDevice){
 				groupsListItems.on('touchstart', function() {
-					var id = $(this).attr('id');
-					console.log(id)
+					var groupsListMenu = $(this).next('ul');
+					_updateGroupsListPosition(groupsListMenu);
+					groupsListMenu.slideDown({duration: 200});									
 				});
 			} else {
 				groupsListItems.on('mouseover', function(){
 					var groupsListMenu = $(this).next('ul');
-					groupsListMenu.show();
+					groupsListMenu.slideDown({duration: 200});
 					_updateGroupsListPosition(groupsListMenu);
 				});
 
@@ -399,8 +399,6 @@ var contextMenuManager = function(isTouchDevice){
 			var p = _getPosition(d3.event);
 			var x = p[0], y = p[1];
 
-			nodeCtxMenu.css({ display: 'block' });
-
 			var popup = $('#node-popup');		
 			['id', 'name', 'surname', 'description', 'sex'].forEach(function(name){
 				var value = node[name];
@@ -423,6 +421,7 @@ var contextMenuManager = function(isTouchDevice){
 			});
 			
 			_setCtxMenuPosition(nodeCtxMenu, x, y, d3container);
+			nodeCtxMenu.slideDown({duration: 200});
 		});
 	};
 
@@ -447,6 +446,7 @@ var contextMenuManager = function(isTouchDevice){
 	};
 
 	function onRightClick(type, object, container, cfg){
+		hide();
 		if (type == 'group')
 			_onGroupRightClick(object, container, cfg);
 		else if (type == 'node'){
