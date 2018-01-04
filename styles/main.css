@@ -164,6 +164,13 @@ input.form-control {
   min-width: 185px;
   background-color: #333333;
 }
+#bgContextMenu .dropdown-menu:first-child,
+#nodeContextMenu .dropdown-menu:first-child,
+#groupContextMenu .dropdown-menu:first-child {
+  display:block;
+  position:static;
+  margin-bottom:5px;
+}
 .navbar-inverse .dropdown-menu li .cmd-text,
 #bgContextMenu .dropdown-menu li .cmd-text,
 #nodeContextMenu .dropdown-menu li .cmd-text,
