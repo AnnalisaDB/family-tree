@@ -27,9 +27,9 @@ var familyTree = function (isTouchDevice){
 		nodeWidth = 200, //200,
 		nodeHeight = 120, //90,
 		nodePadding = 10,
-		nodePortSize = 16,
+		nodePortSize = 8,
 		imageSize = 0, //nodeHeight - 2 * nodePadding,
-		resizersSide = 10,
+		resizersSide = 16,
 		groupColor = '#e18585',
 		groupPadding = 10,
 		maxScale = isTouchDevice ? 0.8 : 1,
@@ -390,7 +390,7 @@ var familyTree = function (isTouchDevice){
 		// mouse events
 		function onMouseOverNode(node){
 			var d3Node = d3.select(this);
-			
+
 			// It is creating a new "relationship" link
 			if (isCreatingRel == 'right' && !d3Node.classed('rel-from')){ // changing toNode
 				var fromNode = d3.select('.rel-from').datum();
@@ -438,8 +438,7 @@ var familyTree = function (isTouchDevice){
 
 			nodeOver = null;
 
-			var d3Node = d3.select(this),
-				relLinks = util.tree.getRelationshipsByPartner(node.id, dataRelLinks);
+			var d3Node = d3.select(this);
 
 			if (isCreatingChild){	
 				d3Node.classed('child-node', false);
@@ -447,7 +446,7 @@ var familyTree = function (isTouchDevice){
 			
 			if (isCreatingRel == 'right') // update toNode
 				d3Node.classed('rel-to', false);
-			else if (isCreatingRel == 'left') // update fromNode
+			else if (isCreatingRel == 'left') // update fromNoe
 				d3Node.classed('rel-from', false);
 
 			TooltipManager.hide(200);
@@ -468,21 +467,12 @@ var familyTree = function (isTouchDevice){
 	    };
 
  		if (isTouchDevice){	
- 			nodes
- 				.on('touchstart', onTouchStartNode);
+ 			nodes.on('touchstart', onTouchStartNode);
  		} else {
 			nodes
 		    	.on('mouseover', onMouseOverNode)
 				.on('mouseout', onMouseOutNode)
 				.on('mousedown', onMouseDownNode);
-
-			nodes.selectAll('.partner-port')
-				.call(
-					d3.behavior.drag()
-	                    .on('dragstart', onStartRelLink)
-	                    .on('drag', onMoveRelLink)
-	                    .on('dragend', onEndRelLink)
-	            );
 		}
 			
 		CtxMenuManager.onRightClick('node', isTouchDevice ? nodes.selectAll('.open-context-menu') : nodes, svg, {
@@ -509,6 +499,48 @@ var familyTree = function (isTouchDevice){
 
 		return nodes;
     };	
+
+    var nodeTouchingOver = null;
+
+    function _detectIfTouchingOverNode(touch){
+    	if (!touch)
+    		return;
+    	var target = document.elementFromPoint(touch.pageX, touch.pageY);
+    	while(target && target.classList && !target.classList.contains('node'))
+    		target = target.parentNode;	
+
+    	if (target && target.classList && target.classList.contains('node')){
+    		var d3Node = d3.select(target)
+    		var node = d3Node.datum();
+
+    		if (nodeTouchingOver == node)
+    			return;
+    		
+    		nodeTouchingOver = node;
+    		
+			// It is creating a new "relationship" link
+			if (isCreatingRel == 'right' && !d3Node.classed('rel-from')){ // changing toNode
+				var fromNode = d3.select('.rel-from').datum();
+				if (!util.tree.haveRelationship(node.id, fromNode.id, dataRelLinks))
+					d3Node.classed('rel-to', true);
+			} else if (isCreatingRel == 'left' && !d3Node.classed('rel-to')) {// changing fromNode
+				var toNode = d3.select('.rel-to').datum();
+				if (!util.tree.haveRelationship(node.id, toNode.id, dataRelLinks))
+					d3Node.classed('rel-from', true);
+			}
+
+    	} else {
+    		if (nodeTouchingOver){
+    			var d3Node = getD3Node(nodeTouchingOver);
+	    		
+	    		if (isCreatingRel == 'right') // update toNode
+					d3Node.classed('rel-to', false);
+				else if (isCreatingRel == 'left') // update fromNoe
+					d3Node.classed('rel-from', false);
+			}
+			nodeTouchingOver = null;
+    	}
+    };
 
     function drawNodes() {
 		if (!svg || svg.empty())
@@ -582,32 +614,45 @@ var familyTree = function (isTouchDevice){
 		newNodes.append('g')
 			.attr('class', 'description')
 			.attr('transform', 'translate(' + (2 * nodePadding + imageSize) + ',' + fromTop + ')');
-		
-		var portHalfSize = nodePortSize * 0.5;
-
+				
 		var parentPort = newNodes.append('circle')
 			.attr({
 				'class': 'parent-port',
-				'r': portHalfSize,
+				'r': nodePortSize,
 				'cx': (nodeWidth * 0.5) + 'px'
 			});
 
 		newNodes.append('polygon')
 			.attr({
 				'class': 'partner-port left',
-				points: '0,' + (0.5 * nodeHeight - portHalfSize) 
-							+ ' ' + portHalfSize + ',' + (0.5 * nodeHeight)
-							+ ' 0,' + (0.5 * nodeHeight + portHalfSize) 
-							+ ' -' + portHalfSize + ',' + (0.5 * nodeHeight)
+				points: '0,' + (0.5 * nodeHeight - nodePortSize) 
+							+ ' ' + nodePortSize + ',' + (0.5 * nodeHeight)
+							+ ' 0,' + (0.5 * nodeHeight + nodePortSize) 
+							+ ' -' + nodePortSize + ',' + (0.5 * nodeHeight)
+			});
+		newNodes.append('circle')
+			.attr({
+				'class': 'partner-port hidden-port left',
+				cx: 0,
+				cy: 0.5 * nodeHeight,
+				r: 1.5 * nodePortSize,
 			});
 			
 		newNodes.append('polygon')
 			.attr({
 				'class': 'partner-port right',
-				points: nodeWidth + ',' + (0.5 * nodeHeight - portHalfSize) 
-							+ ' ' + (nodeWidth + portHalfSize) +',' + (0.5 * nodeHeight)
-							+ ' ' + nodeWidth + ',' + (0.5 * nodeHeight + portHalfSize) 
-							+ ' ' + (nodeWidth - portHalfSize) + ',' + (0.5 * nodeHeight)
+				points: nodeWidth + ',' + (0.5 * nodeHeight - nodePortSize) 
+							+ ' ' + (nodeWidth + nodePortSize) +',' + (0.5 * nodeHeight)
+							+ ' ' + nodeWidth + ',' + (0.5 * nodeHeight + nodePortSize) 
+							+ ' ' + (nodeWidth - nodePortSize) + ',' + (0.5 * nodeHeight)
+			});
+
+		newNodes.append('circle')
+			.attr({
+				'class': 'partner-port right hidden-port',
+				cx: nodeWidth,
+				cy: 0.5 * nodeHeight,
+				r: 1.5 * nodePortSize,
 			});
 
 		if (isTouchDevice){
@@ -778,10 +823,6 @@ var familyTree = function (isTouchDevice){
 				deselectAll();
 				selectGroup(g);
 			}
-/*
-			// disable zoom event if it is a single touch
-			if (d3.event.touches.length == 1)
-				svg.selectAll('.groups').on('touchmove.zoom', null);*/
 		};
 
 		function onTouchEndGroup(g) {	
@@ -1212,13 +1253,17 @@ var familyTree = function (isTouchDevice){
 		
 		newLinks.append('path').attr('class', 'hidden-link');
 
-		var portHalfSize = nodePortSize * 0.5;
-
 		newLinks.append('circle')
 			.style('stroke-width',  2)
 			.attr({
 				'class': 'children-port', 
-				r: portHalfSize + 'px'
+				r: nodePortSize
+			});
+
+		newLinks.append('circle')
+			.attr({
+				'class': 'hidden-port children-port', 
+				r: nodePortSize * 1.5
 			});
 
 
@@ -1248,12 +1293,14 @@ var familyTree = function (isTouchDevice){
 			y1 = Math.min(p1.y, p2.y),
 			x2 = p2.x,
 			y2 = (y1 == p1.y) ? p2.y : p1.y;
-		d3selection.select('.children-port').attr({
+		
+		d3selection.selectAll('.children-port').attr({
 			'cx': xs((x2 + x1 + nodeWidth) * 0.5),
 			'cy': ys((y2 + y1 + nodeHeight ) * 0.5),
-			'r': nodePortSize * 0.5 * scale,
+			'r': nodePortSize * scale,
 			'stroke-width': 2 / scale
 		});
+		d3selection.select('.hidden-port').attr('r', nodePortSize * 1.5 * scale);
 	};
 
 	function _updateD3RelLinks(links){
@@ -1612,15 +1659,17 @@ var familyTree = function (isTouchDevice){
             group.lastY = group.y;
         });
 
-        posB4Drag = isTouchDevice ? d3.touch(svg.node()) : d3.mouse(svg.node());
+        posB4Drag = util.getPosition(sourceEvent, svg.node());
     };
 	
     function onMovingGroups (group) {
+    	var sourceEvent = d3.event.sourceEvent;
+    	var posOnDrag = util.getPosition(sourceEvent, svg.node());;
+
     	if (isResizingGroup == group){
-    		onResizingGroup(isResizingGroup);
+    		onResizingGroup(isResizingGroup, posOnDrag);
 			return;
-    	}
-        var posOnDrag = isTouchDevice ? d3.touch(svg.node()) : d3.mouse(svg.node());
+    	}        
         
         if (posB4Drag && (Math.abs(posOnDrag[0] - posB4Drag[0]) < 5 && Math.abs(posOnDrag[1] - posB4Drag[1]) < 5))
             return;
@@ -1674,21 +1723,34 @@ var familyTree = function (isTouchDevice){
             setTranslateSpeed(0,0);
         }
     };
-	
+    
 	function onStartToMoveNodes (node) {
-		d3.event.sourceEvent.stopPropagation();
+		var sourceEvent = d3.event.sourceEvent;
+		sourceEvent.stopPropagation();
+		var pos = util.getPosition(sourceEvent, svg.node());
+		target = sourceEvent.target;
+		if (target.classList.contains('partner-port')){
+			onStartRelLink(node, target, pos);
+			return;
+		}
         var selection = dataNodes.filter(function(n){return n.selected;});
         selection.forEach(function (n) {
             n.lastX = n.x;
             n.lastY = n.y;
         });
-        posB4Drag = isTouchDevice ? d3.touch(svg.node()) : d3.mouse(svg.node());
+        posB4Drag = pos;
     };
 	
-    function onMovingNodes () {
-    	d3.event.sourceEvent.stopPropagation();
-    	var posOnDrag = isTouchDevice ? d3.touch(svg.node()) : d3.mouse(svg.node());
-        if (posB4Drag && (Math.abs(posOnDrag[0] - posB4Drag[0]) < 5 && Math.abs(posOnDrag[1] - posB4Drag[1]) < 5))
+    function onMovingNodes (node) {
+    	var sourceEvent = d3.event.sourceEvent;
+    	sourceEvent.stopPropagation();
+    	var posOnDrag = util.getPosition(sourceEvent, svg.node());
+    	if (isCreatingRel){
+    		onMoveRelLink(node, posOnDrag, sourceEvent);
+    		return;
+    	}
+    	
+    	if (posB4Drag && (Math.abs(posOnDrag[0] - posB4Drag[0]) < 5 && Math.abs(posOnDrag[1] - posB4Drag[1]) < 5))
             return;
         posB4Drag = null;
         var xRange = xScale.domain(),
@@ -1720,8 +1782,13 @@ var familyTree = function (isTouchDevice){
     };
 
     
-    function onFinishToMoveNodes() {
+    function onFinishToMoveNodes(node) {
     	d3.event.sourceEvent.stopPropagation();
+    	if (isCreatingRel){
+    		onEndRelLink(node);
+    		return;
+    	}
+
         posB4Drag = null;
         var nodes = dataNodes.filter(function(n){return n.selected;}).concat(); // clone array of moved nodes
         if (!nodes.length)
@@ -1748,10 +1815,7 @@ var familyTree = function (isTouchDevice){
         	.on('.zoom', null);
     };
 	
-    function onResizingGroup(group) {
-        // mouse position
-        var mousePos = d3.mouse(svg.node());
-
+    function onResizingGroup(group, mousePos) {
         var w = xScale.invert(mousePos[0]) - group.x;
         var h = yScale.invert(mousePos[1]) - group.y;
 
@@ -1781,7 +1845,6 @@ var familyTree = function (isTouchDevice){
             t.y = -speed;
         setTranslateSpeed(t.x, t.y);        
     };
-
     
     function onFinishToResizeGroup(group) {
     	isResizingGroup = null;
@@ -1797,27 +1860,24 @@ var familyTree = function (isTouchDevice){
         updateGroupValues(group, { width: group.width, height: group.height});
     };
 
-	function onStartRelLink(node){
-		if (!svg || svg.empty())
+	function onStartRelLink(node, target, pos){
+		if (!svg || svg.empty() || !target || !pos)
             return;
-        d3.event.sourceEvent.stopPropagation();
-		var pos = (isTouchDevice) ? [NaN, NaN] : d3.mouse(svg.node());
+		
 		pos[0] = xScale.invert(pos[0]);
 		pos[1] = yScale.invert(pos[1]) - nodeHeight * 0.5;
 		
 		tmpRelLink = { id: 'tmp-link', fromNode: null, toNode: null};
 
 		var d3Node = getD3Node(node),
-			triggerEl = d3.select(this);
-		while (triggerEl && triggerEl.classed('.partner-port'))
-			triggerEl = d3.select(triggerEl.node().parentNode);
+			triggerEl = d3.select(target);
 		
-		if (triggerEl && !triggerEl.empty() && triggerEl.classed('right')){
+		if (target && target.classList.contains('right')){
 			if (d3Node)
 				d3Node.classed('rel-from', true);
 			tmpRelLink.fromNode = node.id;
 			isCreatingRel = 'right';
-		} else if (triggerEl && !triggerEl.empty() && triggerEl.classed('left')){
+		} else if (target && target.classList.contains('left')){
 			if (d3Node)
 				d3Node.classed('rel-to', true);
 			tmpRelLink.toNode = node.id;
@@ -1833,20 +1893,22 @@ var familyTree = function (isTouchDevice){
 		drawLinks();	
 	};
 	
-	function onMoveRelLink(node){
-		if (!isCreatingRel || !svg || svg.empty() )
+	function onMoveRelLink(node, pos, ev){
+		if (!isCreatingRel || !svg || svg.empty() || !pos)
             return;
         
-		var pos = (isTouchDevice) ? [NaN, NaN] : d3.mouse(svg.node());
 		pos[0] = xScale.invert(pos[0]);
 		pos[1] = yScale.invert(pos[1]);
 
 		var x = pos[0],
 			y = pos[1] - nodeHeight * 0.5;
 
+		if (isTouchDevice)
+			_detectIfTouchingOverNode(ev.touches[0]);
+
 		var d3Node = getD3Node(node),
 			d3To = d3.select('.rel-to'), d3From = d3.select('.rel-from');
-		
+
 		if (isCreatingRel == 'right'){
 			tmpRelLink.toNode = null;
 			tmpRelLink.extraCoords = {x: x, y: y};
@@ -3546,7 +3608,7 @@ var familyTree = function (isTouchDevice){
         
         svgToCapture.select('defs').append('style').attr('type', 'text/css').text(cssText);
 		
-		svgToCapture.selectAll('.hidden-link,.hide,.open-context-menu').remove();
+		svgToCapture.selectAll('.hidden-link,.hide,.open-context-menu,circle.partner-port').remove();
 		                
 		// Set scale parameter
 		var xS = d3.scale.linear().domain([0, w]).range([0, scale * w]);
