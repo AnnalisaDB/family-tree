@@ -46,7 +46,7 @@ They can be created in two ways:
 #### Relationships between a couple and sons/daughters
 
 The relationships between a couple and sons/daughters are represented as links anchored to a partner-relationship link and a relative-node.
-The creation of this type of relationship starts by clicking over circular port which is displayed in the middle of partner-relationship link on mouse over.
+The creation of this type of relationship starts by clicking over circular port displayed in the middle of partner-relationship link.
 Then user has to drag and drop the end of link when it anchors to relative-node which will be new son or daughter. That's it!
 
 
