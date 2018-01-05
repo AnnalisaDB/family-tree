@@ -40,7 +40,7 @@ There are two kind of relationships and they are rendered as links:
 They can be created in two ways:
 
  * by choosing `Link to partner` item of relative's context menu which is enabled only if two nodes are selected
- * by dragging and dropping the new link once it anchors to the partners. When mouse is over a relative-node, two rhomboid ports is shown. These are the anchoring points for relationship-links.
+ * by dragging and dropping the new link once it anchors to the partners. Each relative-node has two rhomboid ports, one on the left and the other on the right. These are the anchoring points for relationship-links.
 
 
 #### Relationships between a couple and sons/daughters
