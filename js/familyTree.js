@@ -1187,11 +1187,13 @@ var familyTree = function (isTouchDevice){
 		if (!links || links.empty())
 			return; 
 
-		if (isTouchDevice){
-			console.log('to do');
-			return;
-		}
-		
+		function onClickLink(link){
+			if (!d3.event.ctrlKey) {
+				deselectAll();
+				selectChildLink(link);
+			}
+		};
+
 		function onMouseDownLink(link){
 			CtxMenuManager.hide();
 			if (link.selected) { // multiple selection
@@ -1204,16 +1206,24 @@ var familyTree = function (isTouchDevice){
 			}
 		};
 
-		function onClickLink(link){
-			if (!d3.event.ctrlKey) {
-				deselectAll();
+		function onTouchStartLink(link){
+			CtxMenuManager.hide();
+			if (link.selected) { // multiple selection
+				if (d3.event.ctrlKey)
+					deselectRelLink(link);
+			} else {
+				if (!d3.event.ctrlKey) // single selection
+					deselectAll();
 				selectRelLink(link);
 			}
 		};
 
-		links.on('mousedown', onMouseDownLink)
-			.on('click', onClickLink);			
-
+		if (isTouchDevice)
+			links.on('touchstar', onTouchStartLink);	
+		else 
+			links.on('mousedown', onMouseDownLink)
+				.on('click', onClickLink);	
+		
 		links.selectAll('.children-port')
 			.call(
 				d3.behavior.drag()
@@ -1316,7 +1326,19 @@ var familyTree = function (isTouchDevice){
 			return; 
 
 		if (isTouchDevice){
-			console.log('to do');
+			function onTouchStartLink(link){
+				CtxMenuManager.hide();
+				if (link.selected) { // multiple selection
+					if (d3.event.ctrlKey)
+						deselectRelLink(link);
+				} else {
+					if (!d3.event.ctrlKey) // single selection
+						deselectAll();
+					selectRelLink(link);
+				}
+			};
+
+			links.on('touchstart', onTouchStartLink)
 			return;
 		}
 		
