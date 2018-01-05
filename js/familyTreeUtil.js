@@ -244,9 +244,34 @@ var util = (function(){
 		};
 	};
 
+	var getPosition = function(ev, container){
+		if (!ev)
+			return [NaN, NaN];
+		var x = 0, y = 0;
+		if (ev.touches && ev.touches.length == 1)
+			ev = ev.touches[0];
+		if (ev.pageX || ev.pageY) {
+			x = ev.pageX;
+			y = ev.pageY;
+		} else if (ev.clientX || ev.clientY) {
+			x = ev.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+			y = ev.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+		}
+
+		if (container){
+			var bbox = container.getBoundingClientRect(),
+				viewX = bbox.left,
+				viewY = bbox.top;
+			x -= viewX;
+			y -=viewY;
+		}
+		return [x, y];
+	};
+
 	return {
 		text: text(),
 		color: color(),
-		tree: tree()
+		tree: tree(),
+		getPosition: getPosition
 	}
 })();
