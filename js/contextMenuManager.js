@@ -1,20 +1,6 @@
 var contextMenuManager = function(isTouchDevice){
 	var bgCtxMenu, nodeCtxMenu, groupCtxMenu;
-
-	function _getPosition(ev){
-		var x = 0, y = 0;
-		if (isTouchDevice && ev.touches.length == 1)
-			ev = ev.touches[0];
-		if (ev.pageX || ev.pageY) {
-			x = ev.pageX;
-			y = ev.pageY;
-		} else if (ev.clientX || ev.clientY) {
-			x = ev.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-			y = ev.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-		}
-		return [x, y];
-	};
-
+	
 	function _setCtxMenuPosition(ctxMenu, x, y, d3container){
 		if (!ctxMenu || !d3container || d3container.empty())
 			return;
@@ -93,7 +79,7 @@ var contextMenuManager = function(isTouchDevice){
 			return;
 		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(){
 			d3.event.preventDefault();
-			var p = _getPosition(d3.event);
+			var p = util.getPosition(d3.event);
 			var x = p[0], y = p[1];
 
 			bgCtxMenu.css({
@@ -148,7 +134,7 @@ var contextMenuManager = function(isTouchDevice){
 		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(group){
 			nodeCtxMenu.groupId = group.id;
 			d3.event.preventDefault();
-			var p = _getPosition(d3.event);
+			var p = util.getPosition(d3.event);
 			var x = p[0], y = p[1];
 			
 			var popup = $('#group-popup');		
@@ -399,7 +385,7 @@ var contextMenuManager = function(isTouchDevice){
 		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(node){
 			nodeCtxMenu.nodeId = node.id;
 			d3.event.preventDefault();
-			var p = _getPosition(d3.event);
+			var p = util.getPosition(d3.event);
 			var x = p[0], y = p[1];
 
 			var popup = $('#node-popup');		
