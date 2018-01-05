@@ -39,7 +39,6 @@ var familyTree = function (isTouchDevice){
 		isCreatingChild = false,
 		nodeOver = null,
 		groupOver = null,
-		relLinkOver = null,
 		tmpRelLink, tmpChildLink, tmpNode, tmpFromNode, tmpToNode, tmpGroup,
 		isResizingGroup = null;
 	
@@ -1156,16 +1155,6 @@ var familyTree = function (isTouchDevice){
 			console.log('to do');
 			return;
 		}
-
-		function onMouseOverLink(link){
-			relLinkOver = link;
-			d3.select(this).selectAll('.children-port').classed('hide', link == tmpRelLink || (link != relLinkOver && !link.hasChildren));
-		};
-
-		function onMouseOutLink(link){
-			relLinkOver = null;
-			d3.select(this).selectAll('.children-port').classed('hide', !link.hasChildren);
-		};
 		
 		function onMouseDownLink(link){
 			CtxMenuManager.hide();
@@ -1186,9 +1175,7 @@ var familyTree = function (isTouchDevice){
 			}
 		};
 
-		links.on('mouseover', onMouseOverLink)
-			.on('mouseout', onMouseOutLink)
-			.on('mousedown', onMouseDownLink)
+		links.on('mousedown', onMouseDownLink)
 			.on('click', onClickLink);			
 
 		links.selectAll('.children-port')
@@ -1279,9 +1266,6 @@ var familyTree = function (isTouchDevice){
 			.classed('selected', function (d) { return d.selected; })
 			.each(function(d){
 				_renderRelLink(d3.select(this), d);
-			})
-			.selectAll('.children-port').classed('hide', function(link){ 
-				return link == tmpRelLink || (link != relLinkOver && !link.hasChildren);
 			});
 	};
 
@@ -1557,10 +1541,8 @@ var familyTree = function (isTouchDevice){
 		d3.timer(function () {
             moveToFront(link);
             var d3Link = getD3RelLink(link);
-            if (d3Link){
-            	d3Link.classed('selected', true);
-				d3Link.selectAll('.children-port').classed('hide', link == tmpRelLink || (link != relLinkOver && !link.hasChildren));
-			}           
+            if (d3Link)
+            	d3Link.classed('selected', true); 
             return true;
         });
 		var linksToSelect = dataChildLinks.filter(function (l) {
