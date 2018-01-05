@@ -380,10 +380,9 @@
 		                  		<div class="form-group has-feedback" id="field-color">
 		                    		<label  class="col-sm-2 control-label" for="input-color">Color:</label>
 		                    		<div class="col-sm-10">
-		                        		<select class="form-control" id="input-color" name="color" value="#85e1e1" onchange="var colorField = $(this); var val = colorField.val(); colorField.css('backgroundColor', val);">
-											<option style="background:#cccccc;" value="#cccccc">#cccccc</option>
-											<option style="background:#e18585;" value="#e18585">#e18585</option>
-											<option style="background:#e1a685;" value="#e1a685">#e1a685</option>											
+		                        		<select class="form-control" id="input-color" name="color" value="#e18585" style="background-color:#e18585" onchange="var colorField = $(this); var val = colorField.val(); colorField.css('backgroundColor', val);">
+											<option style="background:#e18585;" value="#e18585" selected="true">#e18585</option>
+											<option style="background:#e1a685;" value="#e1a685">#e1a685</option>	
 											<option style="background:#e1ca85;" value="#e1ca85">#e1ca85</option>
 											<option style="background:#d6e185;" value="#d6e185">#d6e185</option>
 											<option style="background:#b3e185;" value="#b3e185">#b3e185</option>
@@ -398,6 +397,7 @@
 											<option style="background:#d485e1;" value="#d485e1">#d485e1</option>
 											<option style="background:#e185ca;" value="#e185ca">#e185ca</option>
 											<option style="background:#e185a8;" value="#e185a8">#e185a8</option>
+											<option style="background:#cccccc;" value="#cccccc">#cccccc</option>
 										</select>
 		                    		</div>
 		                    		<span class="glyphicon form-control-feedback" aria-hidden="true"></span>
