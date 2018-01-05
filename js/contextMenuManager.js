@@ -158,8 +158,11 @@ var contextMenuManager = function(isTouchDevice){
 				if (field){
 					if (name == 'nodes')
 						field.val(value.join(','));
-					else
+					else 
 						field.val(value);
+					
+					if (field.attr('id') == 'input-color')
+						field.trigger('change');
 				}
 			});
 			
@@ -405,6 +408,8 @@ var contextMenuManager = function(isTouchDevice){
 				var field = popup.find('#input-' + name);
 				if (field)
 					field.val(value);
+				if (field.attr('id') == 'input-sex')
+					field.trigger('change');
 			});
 
 			if (updateItems)
