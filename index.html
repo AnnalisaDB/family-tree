@@ -59,10 +59,14 @@
 			  fill: url(#female-gradient);
 			}
 			.parent-port,
-			.partner-port,
+			polygon.partner-port,
 			.children-port {
 			  fill: #555;
 			  stroke: #fff;
+			}
+			.hidden-port{
+				fill: transparent;
+				stroke: none;
 			}
 			text {
 			  text-decoration: none;
@@ -110,8 +114,8 @@
 			  color: #333333;
 			}
 			.selected .node-base,
-			.selected circle,
-			.selected .partner-port,
+			.selected circle:not(.hidden-port),
+			.selected polygon.partner-port,
 			.selected .visible-link,
 			.selected .group-textarea .background{
 			  stroke: #4cb3f4;
@@ -412,13 +416,13 @@
 		                  		<div class="form-group" id="field-width">
 		                    		<label  class="col-sm-2 control-label" for="input-width">Width:</label>
 		                    		<div class="col-sm-10">
-		                        		<input class="form-control" id="input-width" name="width" type="number" min="1" value="100">
+		                        		<input class="form-control" id="input-width" name="width" type="number" min="32" value="100">
 		                    		</div>
 		                  		</div>
 		                  		<div class="form-group" id="field-height">
 		                    		<label  class="col-sm-2 control-label" for="input-height">Height:</label>
 		                    		<div class="col-sm-10">
-		                        		<input class="form-control" id="input-height" name="height" type="number" min="1" value="100">
+		                        		<input class="form-control" id="input-height" name="height" type="number" min="32" value="100">
 		                    		</div>
 		                  		</div>
 		              		</form>		              		
