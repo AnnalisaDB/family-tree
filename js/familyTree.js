@@ -27,8 +27,9 @@ var familyTree = function (isTouchDevice){
 		nodeWidth = 200, //200,
 		nodeHeight = 120, //90,
 		nodePadding = 10,
+		nodePortSize = 16,
 		imageSize = 0, //nodeHeight - 2 * nodePadding,
-		resizersSide = 8,
+		resizersSide = 10,
 		groupColor = '#85e1e1',
 		groupPadding = 10,
 		maxScale = isTouchDevice ? 0.8 : 1,
@@ -43,7 +44,6 @@ var familyTree = function (isTouchDevice){
 		isResizingGroup = null;
 	
 	var dotRadius = 3,
-
 		isMultiSelection = false;
 	
 	var HistoryManager = actionHistory();
@@ -414,9 +414,6 @@ var familyTree = function (isTouchDevice){
 				d3Node.classed('child-node', !alreadyExist && !isParent);
 			}
 
-			// show partners' ports
-			d3Node.selectAll('.partner-port').classed('hide', false);
-
 			nodeOver = node;
 			
 			// show tooltip if nodes are too small or they have partial texts
@@ -434,12 +431,13 @@ var familyTree = function (isTouchDevice){
 		};
 
 		function onMouseOutNode(node){
-			nodeOver = null;
 			var toElement = d3.event.toElement;
 			while (toElement != null && toElement != this)
 				toElement = toElement.parentNode;				
 			if (toElement)
 				return;
+
+			nodeOver = null;
 
 			var d3Node = d3.select(this),
 				relLinks = util.tree.getRelationshipsByPartner(node.id, dataRelLinks);
@@ -452,14 +450,6 @@ var familyTree = function (isTouchDevice){
 				d3Node.classed('rel-to', false);
 			else if (isCreatingRel == 'left') // update fromNode
 				d3Node.classed('rel-from', false);
-
-			if (relLinks.length){
-				var from = relLinks.some(function(rel){ return rel.fromNode == node.id;});
-				var to = relLinks.some(function(rel){ return rel.toNode == node.id;});
-				d3Node.selectAll('.partner-port.right').classed('hide', !from);
-				d3Node.selectAll('.partner-port.left').classed('hide', !to);
-			} else 
-				d3Node.selectAll('.partner-port').classed('hide', true);
 
 			TooltipManager.hide(200);
 		};
@@ -594,25 +584,31 @@ var familyTree = function (isTouchDevice){
 			.attr('class', 'description')
 			.attr('transform', 'translate(' + (2 * nodePadding + imageSize) + ',' + fromTop + ')');
 		
+		var portHalfSize = nodePortSize * 0.5;
+
 		var parentPort = newNodes.append('circle')
 			.attr({
 				'class': 'parent-port',
-				r: '5px',
-				cx: (nodeWidth * 0.5) + 'px'
+				'r': portHalfSize,
+				'cx': (nodeWidth * 0.5) + 'px'
 			});
 
 		newNodes.append('polygon')
 			.attr({
-				'class': 'partner-port left hide',
-				points: '0,' + (0.5 * nodeHeight - 5) + ' 5,' + (0.5 * nodeHeight)
-							+ ' 0,' + (0.5 * nodeHeight + 5) + ' -5,' + (0.5 * nodeHeight)
+				'class': 'partner-port left',
+				points: '0,' + (0.5 * nodeHeight - portHalfSize) 
+							+ ' ' + portHalfSize + ',' + (0.5 * nodeHeight)
+							+ ' 0,' + (0.5 * nodeHeight + portHalfSize) 
+							+ ' -' + portHalfSize + ',' + (0.5 * nodeHeight)
 			});
 			
 		newNodes.append('polygon')
 			.attr({
-				'class': 'partner-port right hide',
-				points: nodeWidth + ',' + (0.5 * nodeHeight - 5) + ' ' + (nodeWidth + 5) +',' + (0.5 * nodeHeight)
-							+ ' ' + nodeWidth + ',' + (0.5 * nodeHeight + 5) + ' ' + (nodeWidth - 5) + ',' + (0.5 * nodeHeight)
+				'class': 'partner-port right',
+				points: nodeWidth + ',' + (0.5 * nodeHeight - portHalfSize) 
+							+ ' ' + (nodeWidth + portHalfSize) +',' + (0.5 * nodeHeight)
+							+ ' ' + nodeWidth + ',' + (0.5 * nodeHeight + portHalfSize) 
+							+ ' ' + (nodeWidth - portHalfSize) + ',' + (0.5 * nodeHeight)
 			});
 
 		if (isTouchDevice){
@@ -673,17 +669,6 @@ var familyTree = function (isTouchDevice){
 			d3selection.selectAll('.node-base, .partner-port, circle').attr('stroke-width', 2 / currentScale);
 			// image section
 			d3selection.selectAll('.node-image').attr('stroke-width', 1 / currentScale);			
-		});
-
-		nodes.selectAll('.partner-port').classed('hide', function(d){
-			var relLinks = util.tree.getRelationshipsByPartner(d.id, dataRelLinks);
-			if (relLinks.length){
-				if (relLinks.some(function(rel){ return rel.fromNode == d.id;}) && d3.select(this).classed('right'))
-					return false;
-				if (relLinks.some(function(rel){ return rel.toNode == d.id;}) && d3.select(this).classed('left'))
-					return false;
-			}
-			return true;
 		});
 	};
 
@@ -1207,7 +1192,6 @@ var familyTree = function (isTouchDevice){
 			.on('click', onClickLink);			
 
 		links.selectAll('.children-port')
-			.classed('hide', function(link){ return /*....*/})
 			.call(
 				d3.behavior.drag()
 		            .on('dragstart', onStartChildLink)
@@ -1246,11 +1230,13 @@ var familyTree = function (isTouchDevice){
 		
 		newLinks.append('path').attr('class', 'hidden-link');
 
+		var portHalfSize = nodePortSize * 0.5;
+
 		newLinks.append('circle')
 			.style('stroke-width',  2)
 			.attr({
 				'class': 'children-port', 
-				r: '5px'
+				r: portHalfSize + 'px'
 			});
 
 
@@ -1283,7 +1269,7 @@ var familyTree = function (isTouchDevice){
 		d3selection.select('.children-port').attr({
 			'cx': xs((x2 + x1 + nodeWidth) * 0.5),
 			'cy': ys((y2 + y1 + nodeHeight ) * 0.5),
-			'r': 5 * scale,
+			'r': nodePortSize * 0.5 * scale,
 			'stroke-width': 2 / scale
 		});
 	};
@@ -1532,10 +1518,8 @@ var familyTree = function (isTouchDevice){
 		d3.timer(function () {
             moveToFront(node);
             var d3Node = getD3Node(node);
-            if (d3Node){
-            	d3Node.classed('selected', true);
-            	d3Node.selectAll('.partner-port').classed('hide', nodeOver != node);	
-            }           
+            if (d3Node)
+            	d3Node.classed('selected', true); 
             return true;
         });
         var linksToSelect = dataRelLinks.filter(function (link) {
@@ -1755,7 +1739,7 @@ var familyTree = function (isTouchDevice){
         else if (yRange[1] < canvasOfDragging.yRange[1] + nodeHeight)
             t.y = -speed;
 
-		setTranslateSpeed(t.x, t.y);
+		setTranslateSpeed(t.x, t.y);		
     };
 
     
