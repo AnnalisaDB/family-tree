@@ -30,7 +30,7 @@ var familyTree = function (isTouchDevice){
 		nodePortSize = 16,
 		imageSize = 0, //nodeHeight - 2 * nodePadding,
 		resizersSide = 10,
-		groupColor = '#85e1e1',
+		groupColor = '#e18585',
 		groupPadding = 10,
 		maxScale = isTouchDevice ? 0.8 : 1,
 		currentScale, xScale, yScale, zoom,
@@ -794,7 +794,6 @@ var familyTree = function (isTouchDevice){
         	if (isResizingGroup == g)
         		return;
 
-            d3.select(this).selectAll('.resizers').classed('hidden', false);
             // show tooltip if nodes are too small or they have partial texts
 			var maxScale = g.textSize || 14;
 			maxScale = 0.75 * 14 / maxScale; 
@@ -807,10 +806,6 @@ var familyTree = function (isTouchDevice){
         	// hide tooltip
             groupOver = null;
 			TooltipManager.hide(200);
-
-        	if (isResizingGroup == g)
-        		return;
-            d3.select(this).selectAll('.resizers').classed('hidden', true);
         };
 
 		function onMouseDownGroup(g){
@@ -904,7 +899,7 @@ var familyTree = function (isTouchDevice){
 
 		groups.each(function(){_updateD3GroupText(d3.select(this))});
 
-		var resizers = textarea.append('g').attr('class', 'resizers hidden');
+		var resizers = textarea.append('g').attr('class', 'resizers');
 		resizers.append('rect').attr('class', 'resizer bottom-right')
 			.attr('width', resizersSide)
         	.attr('height', resizersSide);
@@ -1751,9 +1746,6 @@ var familyTree = function (isTouchDevice){
         // disable zoom behaviour
         svg.selectAll('rect.zoom-pan-area, .children-links, .relationship-links, .nodes, .groups')
         	.on('.zoom', null);
-        
-        var d3group = getD3Group(group);
-        d3group.select('.resizers').classed('hidden', false);
     };
 	
     function onResizingGroup(group) {
@@ -3078,8 +3070,11 @@ var familyTree = function (isTouchDevice){
 		if (popup){
 			popup.on("hide.bs.modal", function () {
 				var form = popup.find('.form-horizontal');
-			    $.each(form.find('input, textarea'), function(i, input){
-	 				$(input).val('');
+			    $.each(form.find('input, textarea', 'select'), function(i, input){
+	 				var $input = $(input);
+	 				$input.val('');
+	 				if ($input.attr('id') == 'input-sex')
+	 					$input.trigger('change');
 	 			});
 			});
 
@@ -3112,13 +3107,15 @@ var familyTree = function (isTouchDevice){
 		if (gpopup){
 			gpopup.on("hide.bs.modal", function () {
 				var form = gpopup.find('.form-horizontal');
-			    $.each(form.find('input, textarea'), function(i, input){
+			    $.each(form.find('input, textarea', 'select'), function(i, input){
 	 				var $input = $(input),
 	 					id = $input.attr('id');
 	 				if (id == 'input-color')
-	 					$input.val(defaultColor);
+	 					$input.val(groupColor);
 	 				else if (id == 'input-textSize')
 	 					$input.val('14');
+	 				else if (id == 'input-color')
+	 					$input.val(groupColor).trigger('change');
 	 				else if (id == 'input-width')
 	 					$input.val('100');
 	 				else if (id == 'input-height')
@@ -3136,10 +3133,12 @@ var familyTree = function (isTouchDevice){
 	 			var records = form.serializeArray(),
 	 				values = {};
 	 			records.forEach(function(rec){
- 					if (['width', 'height', 'textSize'].indexOf(rec.name) != -1 )
+ 					if (['color', 'width', 'height', 'textSize'].indexOf(rec.name) != -1 )
  						rec.value = 1 * rec.value;
  					values[rec.name] = rec.value;
 	 			});
+	 			values['text'] = form.find('#input-text').val();
+	 			values['color'] = form.find('#input-color').val();
 	 			if (values.id){
 	 				updateGroupValues(getGroupById(values.id), values);
 	 			} else {
