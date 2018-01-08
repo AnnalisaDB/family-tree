@@ -268,10 +268,27 @@ var util = (function(){
 		return [x, y];
 	};
 
+	var isMultiSelection = false;
+
+	var enableMultiSelectionBar = function(){
+		$('#selection-in-touch-device').removeClass('hide');
+		$('#main-family-tree-navbar').addClass('hide');
+		isMultiSelection = true;
+	};
+
+	var disableMultiSelectionBar = function(){
+		$('#selection-in-touch-device').addClass('hide');
+		$('#main-family-tree-navbar').removeClass('hide');
+		isMultiSelection = false;
+	};
+
 	return {
 		text: text(),
 		color: color(),
 		tree: tree(),
-		getPosition: getPosition
+		getPosition: getPosition,
+		isMultiSelection: function(){return isMultiSelection; },
+		enableMultiSelection: enableMultiSelectionBar,
+		disableMultiSelection: disableMultiSelectionBar
 	}
 })();
