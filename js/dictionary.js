@@ -79,7 +79,7 @@ var dictionary = (function(){
 		$('#delete-item span.item-text').html(get('Delete'));
 		$('#select-all-item span.item-text').html(get('SelectAll'));
 		$('#selection-area-item span.item-text').html(get('SelectArea'));	
-		$('#loaded-tree-label span.item-text').html(get('LoadedTree'));
+		$('#loaded-tree-label span').html(get('LoadedTree'));
 		$('#edit-menu span.item-text').html(get('Edit'));
 		$('#view-menu span.item-text').html(get('View'));
 		$('#center-selection-item span.item-text').html(get('CenterSelection'));
