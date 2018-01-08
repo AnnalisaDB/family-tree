@@ -43,7 +43,7 @@ var familyTree = function (isTouchDevice){
 		isResizingGroup = null;
 	
 	var dotRadius = 3,
-		isMultiSelection = false;
+		isMultiSelection = util.isMultiSelection();
 	
 	var HistoryManager = actionHistory();
 	var TooltipManager = tooltipManager(isTouchDevice);
@@ -378,10 +378,10 @@ var familyTree = function (isTouchDevice){
     			CtxMenuManager.hide();
 
     		if (node.selected){
-	    		if (isMultiSelection)
+	    		if (util.isMultiSelection())
 	    			deselectNode(node);
 	    	} else {
-	    		if (!isMultiSelection) 
+	    		if (!util.isMultiSelection()) 
 	    			deselectAll();
 	    		selectNode(node);
 	    	}
@@ -1759,8 +1759,30 @@ var familyTree = function (isTouchDevice){
             setTranslateSpeed(0,0);
         }
     };
+
+    // check tap hold (only for touch devices)
+    var startTouchTime, 
+    	stillTouching, 
+    	touchMove = false;
+
+	function checkTapHold(nID) {
+		if (!touchMove && stillTouching && startTouchTime == nID) {
+			startTouchTime = 0;
+			touchMove = false; 
+			util.enableMultiSelection();   
+		}
+	}
     
 	function onNodeDragStart (node) {
+		if (isTouchDevice && !util.isMultiSelection()){
+			startTouchTime = new Date().getTime();
+			touchMove = false
+			stillTouching = true;
+  			setTimeout(function(){
+  				checkTapHold(startTouchTime);
+  			}, 750);
+		}
+		console.log('dragstart')
 		var sourceEvent = d3.event.sourceEvent;
 		sourceEvent.stopPropagation();
 		var pos = util.getPosition(sourceEvent, svg.node());
@@ -1781,13 +1803,17 @@ var familyTree = function (isTouchDevice){
     	var sourceEvent = d3.event.sourceEvent;
     	sourceEvent.stopPropagation();
     	var posOnDrag = util.getPosition(sourceEvent, svg.node());
-    	if (isCreatingRel){
-    		onMoveRelLink(node, posOnDrag, sourceEvent);
-    		return;
-    	}
     	
     	if (posB4Drag && (Math.abs(posOnDrag[0] - posB4Drag[0]) < 5 && Math.abs(posOnDrag[1] - posB4Drag[1]) < 5))
             return;
+
+        if (isTouchDevice && !util.isMultiSelection())
+			touchMove = true;
+
+        if (isCreatingRel){
+    		onMoveRelLink(node, posOnDrag, sourceEvent);
+    		return;
+    	}
         posB4Drag = null;
         var xRange = xScale.domain(),
             yRange = yScale.domain(),
@@ -1819,6 +1845,9 @@ var familyTree = function (isTouchDevice){
 
     
     function onNodeDragEnd(node) {
+    	if (isTouchDevice && !util.isMultiSelection())
+    		stillTouching = false;    	
+
     	d3.event.sourceEvent.stopPropagation();
     	if (isCreatingRel){
     		onEndRelLink(node);
@@ -3806,8 +3835,6 @@ var familyTree = function (isTouchDevice){
 		redo: function() { HistoryManager.redo(); },
 		openNodePopup: openNodePopup,
 		openGroupPopup: openGroupPopup,
-		openElementPopup: openElementPopup,
-		enableMultiSelection: function(){ isMultiSelection = true; },
-		disableMultiSelection: function(){ isMultiSelection = false; }
+		openElementPopup: openElementPopup
 	};
 };
