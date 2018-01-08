@@ -955,9 +955,7 @@ var familyTree = function (isTouchDevice){
 		groups.each(function(){_updateD3GroupText(d3.select(this))});
 
 		var resizers = textarea.append('g').attr('class', 'resizers');
-		resizers.append('rect').attr('class', 'resizer bottom-right')
-			.attr('width', resizersSide)
-        	.attr('height', resizersSide);
+		resizers.append('rect').attr('class', 'resizer bottom-right');
 
     	if (isTouchDevice){
 			var openGroupCtxMenuDots = textarea.append('g')
@@ -1170,8 +1168,10 @@ var familyTree = function (isTouchDevice){
         var resizer = d3selection.select('.resizer.bottom-right');
         if (resizer.empty())
         	return;
-        resizer.attr('x', w - resizersSide)
-        	.attr('y', h - resizersSide)
+        resizer.attr('x', w - resizersSide * scale)
+        	.attr('y', h - resizersSide * scale)
+			.attr('width', resizersSide * scale)
+        	.attr('height', resizersSide * scale)
         	.attr('fill', util.color.invert(color));
 
     	var openGroupCtxMenuDots = d3selection.select('.open-context-menu');
