@@ -401,6 +401,21 @@ $('#viewport').on(eventStart, function(){
 	$('.dropdown.open').trigger(eventStart);
 });
 
+// multi selection navbar
+$('#exit-from-selection-mode a').on(eventStart, function(){
+	util.disableMultiSelection();
+});
+
+$('#delete-selected-objects a').on(eventStart, function(){
+	deleteElements();
+	util.disableMultiSelection();
+});
+
+$('#center-selected-objects a').on(eventStart, function(){
+	FamilyTree.centerSelection();
+	util.disableMultiSelection();	
+});
+
 $(document).on('action', function(ev, action, undoCounter, redoCounter){
 	if (undoCounter){
 		undoMenuItem.removeClass('disabled');
