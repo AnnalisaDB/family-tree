@@ -492,9 +492,9 @@ var familyTree = function (isTouchDevice){
 
 		nodes.call(
 			d3.behavior.drag()
-				.on('dragstart', onStartToMoveNodes)
-				.on('drag', onMovingNodes)
-				.on('dragend', onFinishToMoveNodes)
+				.on('dragstart', onNodeDragStart)
+				.on('drag', onNodeDrag)
+				.on('dragend', onNodeDragEnd)
 		);
 
 		return nodes;
@@ -529,6 +529,17 @@ var familyTree = function (isTouchDevice){
 					d3Node.classed('rel-from', true);
 			}
 
+			// It is creating a new "child" link
+			if (isCreatingChild && tmpChildLink && !d3Node.classed('child-node')){
+				var relId = tmpChildLink.relId;
+				var alreadyExist = dataChildLinks.some(function(clink){
+					return clink.relId == relId && clink.childId == node.id;
+				});
+				var rel = getRelLinkById(relId)
+					isParent = rel.fromNode == node.id || rel.toNode == node.id;
+				d3Node.classed('child-node', !alreadyExist && !isParent);
+			}
+
     	} else {
     		if (nodeTouchingOver){
     			var d3Node = getD3Node(nodeTouchingOver);
@@ -537,6 +548,9 @@ var familyTree = function (isTouchDevice){
 					d3Node.classed('rel-to', false);
 				else if (isCreatingRel == 'left') // update fromNoe
 					d3Node.classed('rel-from', false);
+
+				if (isCreatingChild)	
+					d3Node.classed('child-node', false);
 			}
 			nodeTouchingOver = null;
     	}
@@ -1746,7 +1760,7 @@ var familyTree = function (isTouchDevice){
         }
     };
     
-	function onStartToMoveNodes (node) {
+	function onNodeDragStart (node) {
 		var sourceEvent = d3.event.sourceEvent;
 		sourceEvent.stopPropagation();
 		var pos = util.getPosition(sourceEvent, svg.node());
@@ -1763,7 +1777,7 @@ var familyTree = function (isTouchDevice){
         posB4Drag = pos;
     };
 	
-    function onMovingNodes (node) {
+    function onNodeDrag (node) {
     	var sourceEvent = d3.event.sourceEvent;
     	sourceEvent.stopPropagation();
     	var posOnDrag = util.getPosition(sourceEvent, svg.node());
@@ -1804,7 +1818,7 @@ var familyTree = function (isTouchDevice){
     };
 
     
-    function onFinishToMoveNodes(node) {
+    function onNodeDragEnd(node) {
     	d3.event.sourceEvent.stopPropagation();
     	if (isCreatingRel){
     		onEndRelLink(node);
@@ -1995,9 +2009,10 @@ var familyTree = function (isTouchDevice){
 		if (!svg || svg.empty())
             return;
 
-        d3.event.sourceEvent.stopPropagation();
+        var sourceEvent = d3.event.sourceEvent;
+        sourceEvent.stopPropagation();
 
-        var pos = (isTouchDevice) ? [NaN, NaN] : d3.mouse(svg.node());
+        var pos = util.getPosition(sourceEvent, svg.node());
 		pos[0] = xScale.invert(pos[0]);
 		pos[1] = yScale.invert(pos[1]);
 		
@@ -2021,8 +2036,13 @@ var familyTree = function (isTouchDevice){
 	function onMoveChildLink(relLink){
 		if (!isCreatingChild || !svg || svg.empty() )
             return;
+
+        var ev = d3.event.sourceEvent;
+
+        if (isTouchDevice)
+			_detectIfTouchingOverNode(ev.touches[0]);
         
-		var pos = (isTouchDevice) ? [NaN, NaN] : d3.mouse(svg.node());
+		var pos = util.getPosition(ev, svg.node());
 		pos[0] = xScale.invert(pos[0]);
 		pos[1] = yScale.invert(pos[1]);
 
@@ -2039,7 +2059,6 @@ var familyTree = function (isTouchDevice){
 
 		var t = { x: 0, y: 0 },
 			speed = 5;
-
 
 		if (tmpChildLink.extraCoords){
 			var x = pos[0];
