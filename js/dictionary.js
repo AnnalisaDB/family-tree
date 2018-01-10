@@ -11,6 +11,7 @@ var dictionary = (function(){
 		'CreateRelative': {eng: 'Create relative', ita: 'Crea familiare'},
 		'Delete': {eng: 'Delete', ita: 'Elimina'},
 		'Description': {eng: 'Description', ita: 'Descrizione'},
+		'DeselectAll': {eng: 'Deselect All', ita: 'Deseleziona tutto'},
 		'Edit': {eng: 'Edit', ita: 'Modifica'},
 		'EditSelected': {eng: 'Edit selected', ita: 'Modifica selezionato'},
 		'Extend': {eng: 'Extend', ita: 'Mostra tutto'},
@@ -66,11 +67,12 @@ var dictionary = (function(){
 	};
 
 	function update(){
-		updateNavBar();
+		updateNavBars();
 		updatePopups();
+		updateCtxMenus();
 	};
 
-	function updateNavBar(){
+	function updateNavBars(){
 		$('#new-item span.item-text').html(get('NewTree'));
 		$('#open-item span.item-text').html(get('Open'));
 		$('#save-as-item span.item-text').html(get('SaveAs'));
@@ -84,6 +86,8 @@ var dictionary = (function(){
 		$('#view-menu span.item-text').html(get('View'));
 		$('#center-selection-item span.item-text').html(get('CenterSelection'));
 		$('#extend-item span.item-text').html(get('Extend'));
+		$('#select-all-objects span.item-text').html(get('SelectAll'));
+		$('#deselect-all-objects span.item-text').html(get('DeselectAll'));
 	};
 
 	function updatePopups(){
@@ -125,7 +129,9 @@ var dictionary = (function(){
 		$openTreePopup.find('.modal-header .modal-title').html(get('Open'));
 		$openTreePopup.find('#field-file-name label').html(get('ChooseFile') + ':');
 		$openTreePopup.find('.modal-footer #cancel').html(get('Cancel') );
+	};
 
+	function updateCtxMenus(){
 		var $bgContextMenu = $('#bgContextMenu');
 		$bgContextMenu.find('#create-node span.item-text').html(get('CreateRelative'));
 		$bgContextMenu.find('#create-group span.item-text').html(get('CreateGroup'));
