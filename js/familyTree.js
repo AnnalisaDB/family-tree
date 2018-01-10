@@ -42,12 +42,36 @@ var familyTree = function (isTouchDevice){
 		tmpRelLink, tmpChildLink, tmpNode, tmpFromNode, tmpToNode, tmpGroup,
 		isResizingGroup = null;
 	
-	var dotRadius = 3,
-		isMultiSelection = util.isMultiSelection();
+	// radius of option menus
+	var dotRadius = 3;
+
+	// check tap hold (only for touch devices)
+    var startTouchTime, 
+    	stillTouching, 
+    	touchMove = false;
+
+	function checkTapHold(nID) {
+		if (!touchMove && stillTouching && startTouchTime == nID) {
+			startTouchTime = 0;
+			touchMove = false; 
+			util.selectionMode.enableMulti(isTouchDevice);   
+		}
+	};
+
+	// touch-mouse position before dragging events
+	var posB4Drag;
 	
 	var HistoryManager = actionHistory();
 	var TooltipManager = tooltipManager(isTouchDevice);
 	var CtxMenuManager = contextMenuManager(isTouchDevice);
+
+	function getSelectionCount(){
+		var count = dataNodes.filter(function(n){return n.selected;}).length;
+			count += dataRelLinks.filter(function(n){return n.selected;}).length;
+			count += dataChildLinks.filter(function(n){return n.selected;}).length;
+			count += dataGroups.filter(function(n){return n.selected;}).length;
+		return count;
+	};
 	
 	// private methods
 	function _getViewport(nodes, groups){
@@ -371,20 +395,11 @@ var familyTree = function (isTouchDevice){
 
     	// touch events
     	function onTouchStartNode(node){
-    		var touchingDOM = d3.event.target;
-    		while (touchingDOM && touchingDOM != this && !touchingDOM.classList.contains('open-context-menu'))
-    			touchingDOM = touchingDOM.parentNode;
-    		if (!touchingDOM || !touchingDOM.classList.contains('open-context-menu'))
+    		var touchingDOM = util.getAncestorByClass(d3.event.target, 'open-context-menu', this);
+    		if (!touchingDOM || !util.hasClass(touchingDOM, 'open-context-menu'))
     			CtxMenuManager.hide();
 
-    		if (node.selected){
-	    		if (util.isMultiSelection())
-	    			deselectNode(node);
-	    	} else {
-	    		if (!util.isMultiSelection()) 
-	    			deselectAll();
-	    		selectNode(node);
-	    	}
+    		doSelectNode(node);
     	};
 
 		// mouse events
@@ -454,16 +469,63 @@ var familyTree = function (isTouchDevice){
 
 		function onMouseDownNode(node) {
 	    	CtxMenuManager.hide();
-	    	var isCtrlKeyDown = event.ctrlKey;
+	    	doSelectNode(node);
+	    };
 
-	    	if (node.selected){
-	    		if (isCtrlKeyDown)
-	    			deselectNode(node);
-	    	} else {
-	    		if (!isCtrlKeyDown) // single selection
-	    			deselectAll();
-	    		selectNode(node);
+	    function onDragStartNode (node) {
+			if (isTouchDevice && !util.selectionMode.isMulti()){
+				startTouchTime = new Date().getTime();
+				touchMove = false
+				stillTouching = true;
+	  			setTimeout(function(){
+	  				checkTapHold(startTouchTime);
+	  			}, 750);
+			}
+			var sourceEvent = d3.event.sourceEvent;
+			sourceEvent.stopPropagation();
+
+			var pos = util.getPosition(sourceEvent, svg.node());
+			
+			// if target is a partner-port, it will starts the creation of a new relationship-link
+			if (util.hasClass(sourceEvent.target, 'partner-port')){
+				onStartRelLink(node, sourceEvent.target, pos);
+				return;
+			}
+			// otherwise it will starts to drag selected nodes and groups 
+			onDragStartSelection(pos);
+	    };
+
+	    function onDragNode (node) {
+	    	var sourceEvent = d3.event.sourceEvent;
+	    	sourceEvent.stopPropagation();
+	    	
+	    	var posOnDrag = util.getPosition(sourceEvent, svg.node());
+	    	
+	    	if (posB4Drag && (Math.abs(posOnDrag[0] - posB4Drag[0]) < 5 && Math.abs(posOnDrag[1] - posB4Drag[1]) < 5))
+	            return;
+
+	        if (isTouchDevice && !util.selectionMode.isMulti())
+				touchMove = true;
+
+	        if (isCreatingRel){
+	    		onMoveRelLink(node, posOnDrag, sourceEvent);
+	    		return;
 	    	}
+
+	    	onDragSelection(posOnDrag, d3.event.dx, d3.event.dy);
+	    };
+
+    	function onDragEndNode(node) {
+	    	if (isTouchDevice && !util.selectionMode.isMulti())
+	    		stillTouching = false;    	
+
+	    	d3.event.sourceEvent.stopPropagation();
+	    	if (isCreatingRel){
+	    		onEndRelLink(node);
+	    		return;
+	    	}
+
+	    	onDragEndSelection();
 	    };
 
  		if (isTouchDevice){	
@@ -476,13 +538,7 @@ var familyTree = function (isTouchDevice){
 		}
 			
 		CtxMenuManager.onRightClick('node', isTouchDevice ? nodes.selectAll('.open-context-menu') : nodes, svg, {
-			getSelectionCount: function(){
-				var count = dataNodes.filter(function(n){return n.selected;}).length;
-					count += dataRelLinks.filter(function(n){return n.selected;}).length;
-					count += dataChildLinks.filter(function(n){return n.selected;}).length;
-					count += dataGroups.filter(function(n){return n.selected;}).length;
-				return count;
-			},
+			getSelectionCount: getSelectionCount,
 			updateItems: function(){
 				_updateAddToGroupsItem();
 				_updateLinkToPartnerItem();
@@ -492,9 +548,9 @@ var familyTree = function (isTouchDevice){
 
 		nodes.call(
 			d3.behavior.drag()
-				.on('dragstart', onNodeDragStart)
-				.on('drag', onNodeDrag)
-				.on('dragend', onNodeDragEnd)
+				.on('dragstart', onDragStartNode)
+				.on('drag', onDragNode)
+				.on('dragend', onDragEndNode)
 		);
 
 		return nodes;
@@ -506,8 +562,7 @@ var familyTree = function (isTouchDevice){
     	if (!touch)
     		return;
     	var target = document.elementFromPoint(touch.pageX, touch.pageY);
-    	while(target && target.classList && !target.classList.contains('node'))
-    		target = target.parentNode;	
+    	target = util.getAncestorByClass(target, 'node');
 
     	if (target && target.classList && target.classList.contains('node')){
     		var d3Node = d3.select(target)
@@ -826,22 +881,21 @@ var familyTree = function (isTouchDevice){
 
 		// touch events
     	function onTouchStartGroup(g) {
-    		var touchingDOM = d3.event.target;
-    		while (touchingDOM && touchingDOM != this && !touchingDOM.classList.contains('open-context-menu'))
-    			touchingDOM = touchingDOM.parentNode;
-    		if (!touchingDOM || !touchingDOM.classList.contains('open-context-menu'))
+    		var touchingDOM = util.getAncestorByClass(d3.event.target, 'open-context-menu', this);
+    		if (!touchingDOM || !util.hasClass(touchingDOM, 'open-context-menu'))
     			CtxMenuManager.hide();
 
+			doSelectGroup(g);
 			// select it if not
-			if (!g.selected){
-				deselectAll();
+			if (g.selected) { // multiple selection
+				if (util.selectionMode.isMulti())
+					deselectGroup(g);
+			} else {
+				if (!util.selectionMode.isMulti()) // single selection
+					deselectAll();
 				selectGroup(g);
 			}
 		};
-
-		function onTouchEndGroup(g) {	
-		};
-
 		// mouse events
 		function onMouseOverGroup(g){
         	groupOver = g;
@@ -865,61 +919,93 @@ var familyTree = function (isTouchDevice){
 
 		function onMouseDownGroup(g){
 			CtxMenuManager.hide();
+			// select it if not
 			if (g.selected) { // multiple selection
-				if (d3.event.ctrlKey)
+				if (util.selectionMode.isMulti())
 					deselectGroup(g);
 			} else {
-				if (!d3.event.ctrlKey) // single selection
+				if (!util.selectionMode.isMulti()) // single selection
 					deselectAll();
 				selectGroup(g);
 			}
 		};
 
-		function onClickGroup(g){
-			if (!d3.event.ctrlKey) {
-				deselectAll();
-				selectGroup(g);
+		function onDragStartGroup(group) {
+			if (isTouchDevice && !util.selectionMode.isMulti()){
+				startTouchTime = new Date().getTime();
+				touchMove = false
+				stillTouching = true;
+	  			setTimeout(function(){
+	  				if (!isResizingGroup && !$('#groupContextMenu').is(':visible'))
+	  					checkTapHold(startTouchTime);
+	  			}, 750);
 			}
-		};
+
+			var sourceEvent = d3.event.sourceEvent;
+			if (util.hasClass(sourceEvent.target, 'resizer')){
+				onStartToResizeGroup(group);
+				return;
+			}
+
+			sourceEvent.stopPropagation();
+	        
+	        onDragStartSelection(util.getPosition(sourceEvent, svg.node()));
+	    };
+
+		function onDragGroup (group) {
+	    	var sourceEvent = d3.event.sourceEvent;
+	    	var pos = util.getPosition(sourceEvent, svg.node());
+	        
+	        if (posB4Drag && (Math.abs(pos[0] - posB4Drag[0]) < 5 && Math.abs(pos[1] - posB4Drag[1]) < 5))
+	            return;
+
+	        if (isResizingGroup == group && !util.selectionMode.isMulti()){
+	    		onResizingGroup(isResizingGroup, posOnDrag);
+				return;
+	    	}  
+
+	        if (isTouchDevice && !util.selectionMode.isMulti())
+				touchMove = true;
+
+			onDragSelection(pos, d3.event.dx, d3.event.dy);
+			
+	    };
+
+		function onDragEndGroup(group) {
+	    	if (isTouchDevice && !util.selectionMode.isMulti())
+	    		stillTouching = false;    	
+
+	    	if (isResizingGroup == group && !util.selectionMode.isMulti()){
+	    		onFinishToResizeGroup(group);
+				return;
+	    	}
+
+	    	onDragEndSelection();
+	    };
 
 		if (isTouchDevice){
-			textarea
-	            .on('touchstart', onTouchStartGroup)
-				.on('touchend', onTouchEndGroup);
+			textarea.on('touchstart', onTouchStartGroup);
 
 			CtxMenuManager.onRightClick('group', textarea.select('.open-context-menu'), svg, {
-				getSelectionCount: function(){
-					var count = dataNodes.filter(function(n){return n.selected;}).length;
-						count += dataRelLinks.filter(function(n){return n.selected;}).length;
-						count += dataChildLinks.filter(function(n){return n.selected;}).length;
-						count += dataGroups.filter(function(n){return n.selected;}).length;
-					return count;
-				}
+				getSelectionCount: getSelectionCount
 			});
 		} else {
-			// Add event listeners
-			CtxMenuManager.onRightClick('group', textarea, svg, { 
-				getSelectionCount: function(){
-					var count = dataNodes.filter(function(n){return n.selected;}).length;
-						count += dataRelLinks.filter(function(n){return n.selected;}).length;
-						count += dataChildLinks.filter(function(n){return n.selected;}).length;
-						count += dataGroups.filter(function(n){return n.selected;}).length;
-					return count;
-				}
-			});
-
-	        textarea
+			textarea
 	            .on('mousedown', onMouseDownGroup)
-				.on('click', onClickGroup)
 	            .on('mouseover', onMouseOverGroup)
 	            .on('mouseout', onMouseOutGroup);
+
+			// Add event listeners
+			CtxMenuManager.onRightClick('group', textarea, svg, { 
+				getSelectionCount: getSelectionCount
+			});
         }
 
         textarea.call(
         	d3.behavior.drag()
-	            .on('dragstart', onStartToMoveGroups)
-	            .on('drag', onMovingGroups)
-	            .on('dragend', onFinishToMoveGroups)
+	            .on('dragstart', onDragStartGroup)
+	            .on('drag', onDragGroup)
+	            .on('dragend', onDragEndGroup)
         );
 		return groups;
     };	   
@@ -1201,50 +1287,17 @@ var familyTree = function (isTouchDevice){
 		if (!links || links.empty())
 			return; 
 
-		function onClickLink(link){
-			if (!d3.event.ctrlKey) {
-				deselectAll();
-				selectChildLink(link);
-			}
-		};
-
-		function onMouseDownLink(link){
+		links.on((isTouchDevice) ? 'touchstart' : 'mousedown', function(link){
 			CtxMenuManager.hide();
-			if (link.selected) { // multiple selection
-				if (d3.event.ctrlKey)
-					deselectRelLink(link);
-			} else {
-				if (!d3.event.ctrlKey) // single selection
-					deselectAll();
-				selectRelLink(link);
-			}
-		};
-
-		function onTouchStartLink(link){
-			CtxMenuManager.hide();
-			if (link.selected) { // multiple selection
-				if (d3.event.ctrlKey)
-					deselectRelLink(link);
-			} else {
-				if (!d3.event.ctrlKey) // single selection
-					deselectAll();
-				selectRelLink(link);
-			}
-		};
-
-		if (isTouchDevice)
-			links.on('touchstar', onTouchStartLink);	
-		else 
-			links.on('mousedown', onMouseDownLink)
-				.on('click', onClickLink);	
+			doSelectRelLink(link);
+		});
 		
-		links.selectAll('.children-port')
-			.call(
-				d3.behavior.drag()
-		            .on('dragstart', onStartChildLink)
-		            .on('drag', onMoveChildLink)
-		            .on('dragend', onEndChildLink)
-            );
+		links.call(
+			d3.behavior.drag()
+	            .on('dragstart', onStartChildLink)
+	            .on('drag', onMoveChildLink)
+	            .on('dragend', onEndChildLink)
+        );
 
         return links;
 	};
@@ -1275,7 +1328,11 @@ var familyTree = function (isTouchDevice){
 				'stroke-width': '2px'
 			});
 		
-		newLinks.append('path').attr('class', 'hidden-link');
+		newLinks.append('path')
+			.attr({
+				'class': 'hidden-link',
+				'stroke-width': nodePortSize + 'px'
+			});
 
 		newLinks.append('circle')
 			.style('stroke-width',  2)
@@ -1312,7 +1369,7 @@ var familyTree = function (isTouchDevice){
 			x2: p2.x,
 			y2: p2.y + (nodeHeight) * 0.5
 		};
-		d3selection.select('path').attr('d', util.tree.drawLine(points, 'lr', xs, ys));
+		d3selection.selectAll('path').attr('d', util.tree.drawLine(points, 'lr', xs, ys));
 		var x1 = p1.x,
 			y1 = Math.min(p1.y, p2.y),
 			x2 = p2.x,
@@ -1339,45 +1396,10 @@ var familyTree = function (isTouchDevice){
 		if (!links || links.empty())
 			return; 
 
-		if (isTouchDevice){
-			function onTouchStartLink(link){
-				CtxMenuManager.hide();
-				if (link.selected) { // multiple selection
-					if (d3.event.ctrlKey)
-						deselectRelLink(link);
-				} else {
-					if (!d3.event.ctrlKey) // single selection
-						deselectAll();
-					selectRelLink(link);
-				}
-			};
-
-			links.on('touchstart', onTouchStartLink)
-			return;
-		}
-		
-		function onMouseDownLink(link){
+		links.on((isTouchDevice) ? 'touchstart' : 'mousedown', function(link){
 			CtxMenuManager.hide();
-			if (link.selected) { // multiple selection
-				if (d3.event.ctrlKey)
-					deselectChildLink(link);
-			} else {
-				if (!d3.event.ctrlKey) // single selection
-					deselectAll();
-				selectChildLink(link);
-			}
-		};
-
-		function onClickLink(link){
-			if (!d3.event.ctrlKey) {
-				deselectAll();
-				selectChildLink(link);
-			}
-		};
-		
-		links
-			.on('mousedown', onMouseDownLink)
-			.on('click', onClickLink);	
+			doSelectChildLink(link)
+		});
 
 		return links;
 	};
@@ -1407,7 +1429,11 @@ var familyTree = function (isTouchDevice){
 				'stroke-width': '2px'
 			});
 		
-		newLinks.append('path').attr('class', 'hidden-link');
+		newLinks.append('path')
+			.attr({
+				'class': 'hidden-link',
+				'stroke-width': nodePortSize + 'px'
+			});
 		
 		if (addEventsCallback)
         	newLinks = addEventsCallback(newLinks);
@@ -1551,6 +1577,19 @@ var familyTree = function (isTouchDevice){
 			removeNodesFrom(nodesToRemove, group);
 		});
 	};
+
+	function doSelectGroup(g){
+		// select it if not
+		if (g.selected) { // multiple selection
+			if (util.selectionMode.isMulti())
+				deselectGroup(g);
+		} else {
+			if (!util.selectionMode.isMulti()) // single selection
+				deselectAll();
+			selectGroup(g);
+		}
+		util.selectionMode.updateSelectedCounter(getSelectionCount());
+	};
 	
     function selectGroup(group){
 		if (!group || group.selected)
@@ -1565,13 +1604,25 @@ var familyTree = function (isTouchDevice){
             return true;
         });
 	};
-	
+
 	function deselectGroup(group){
 		if (!group)
 			return;
 		group.selected = false;
 		d3.select('.group#group-' + group.id).classed('selected', false);	
 	};
+
+	function doSelectNode(node){
+		if (node.selected){
+    		if (util.selectionMode.isMulti())
+    			deselectNode(node);
+    	} else {
+    		if (!util.selectionMode.isMulti()) 
+    			deselectAll();
+    		selectNode(node);
+    	}
+    	util.selectionMode.updateSelectedCounter(getSelectionCount());
+    };
 
 	function selectNode(node){
 		if (!node || node.selected)
@@ -1612,6 +1663,18 @@ var familyTree = function (isTouchDevice){
         linksToRemove.forEach(deselectChildLink);
 	};
 
+	function doSelectRelLink(link){
+		if (link.selected) { // multiple selection
+			if (util.selectionMode.isMulti())
+				deselectRelLink(link);
+		} else {
+			if (!util.selectionMode.isMulti()) // single selection
+				deselectAll();
+			selectRelLink(link);
+		}
+		util.selectionMode.updateSelectedCounter(getSelectionCount());
+	};
+
 	function selectRelLink(link){
 		if (!link || link.selected)
             return;		
@@ -1641,6 +1704,18 @@ var familyTree = function (isTouchDevice){
 		
 		linksToRemove.forEach(deselectChildLink);
 	};
+
+	function doSelectChildLink(link){
+		if (link.selected) { // multiple selection
+			if (util.selectionMode.isMulti())
+				deselectChildLink(link);
+		} else {
+			if (!util.selectionMode.isMulti()) // single selection
+				deselectAll();
+			selectChildLink(link);
+		}
+		util.selectionMode.updateSelectedCounter(getSelectionCount());
+	};
 	
 	function selectChildLink(link){
 		if (!link || link.selected)
@@ -1668,6 +1743,7 @@ var familyTree = function (isTouchDevice){
 		dataNodes.forEach(function(d){d.selected = false; });
 		dataRelLinks.forEach(function(d){d.selected = false; });
 		dataChildLinks.forEach(function(d){d.selected = false; });
+		util.selectionMode.updateSelectedCounter(getSelectionCount());
 		update();
 	};
 
@@ -1676,196 +1752,95 @@ var familyTree = function (isTouchDevice){
 		dataNodes.forEach(function(d){d.selected = true; });
 		dataRelLinks.forEach(function(d){d.selected = true; });
 		dataChildLinks.forEach(function(d){d.selected = true; });
+		util.selectionMode.updateSelectedCounter(getSelectionCount());
 		update();
 	};
-	
-	var posB4Drag;
-
-	function onStartToMoveGroups (group) {
-		var sourceEvent = d3.event.sourceEvent;
-		if (sourceEvent.target.classList.contains('resizer')){
-			onStartToResizeGroup(group);
+    
+	function onDragStartSelection(pos){
+		if (!pos || pos[0] == NaN || pos[1] == NaN)
 			return;
-		}
 
-		sourceEvent.stopPropagation();
-        var selection = dataGroups.filter(function(group){return group.selected;});
-        selection.forEach(function (group) {
-            group.lastX = group.x;
-            group.lastY = group.y;
-        });
-
-        posB4Drag = util.getPosition(sourceEvent, svg.node());
-    };
+		function saveLastPosition(d){
+			if (!d.selected)
+				return;
+			d.lastX = d.x;
+	        d.lastY = d.y;
+		};
+		
+		dataNodes.forEach(saveLastPosition);
+	    dataGroups.forEach(saveLastPosition);
+	    
+	    posB4Drag = pos;
+	};
 	
-    function onMovingGroups (group) {
-    	var sourceEvent = d3.event.sourceEvent;
-    	var posOnDrag = util.getPosition(sourceEvent, svg.node());;
-
-    	if (isResizingGroup == group){
-    		onResizingGroup(isResizingGroup, posOnDrag);
+    function onDragSelection (pos, dx, dy) {
+    	if (!pos || pos[0] == NaN || pos[1] == NaN || dx == NaN || dy == NaN)
 			return;
-    	}        
+
+    	if (posB4Drag && (Math.abs(pos[0] - posB4Drag[0]) < 5 && Math.abs(pos[1] - posB4Drag[1]) < 5))
+            return;
+
+        posB4Drag = null;
+        var xRange = xScale.domain(),
+            yRange = yScale.domain(),
+            t = { x: 0, y: 0 };
         
-        if (posB4Drag && (Math.abs(posOnDrag[0] - posB4Drag[0]) < 5 && Math.abs(posOnDrag[1] - posB4Drag[1]) < 5))
-            return;
-        posB4Drag = null;
-        var xRange = xScale.domain(),
-            yRange = yScale.domain(),
-            t = { x: 0, y: 0 };
-        var selection = dataGroups.filter(function(group){return group.selected; });
-		selection.forEach(function (group) {
-	        group.x = xScale.invert(d3.event.dx + xScale(group.x));
-	        group.y = yScale.invert(d3.event.dy + yScale(group.y));
-			group.dragging = true;
-		});
+        function updatePosition(d){
+			d.x = xScale.invert(dx + xScale(d.x));
+            d.y = yScale.invert(dy + yScale(d.y));
+			d.dragging = true;
+		};
+
+        var nSelection = dataNodes.filter(function(n){return n.selected; });
+        nSelection.forEach(updatePosition);
+        var gSelection = dataGroups.filter(function(g){return g.selected; });
+		gSelection.forEach(updatePosition);
+        
+        // get area of dragging nodes+groups and if it is out of range, the viewport will properly scroll
+        var canvasOfNodes = {
+            xRange: d3.extent(nSelection, function (n) { return n.x; }),
+            yRange: d3.extent(nSelection, function (n) { return n.y; })
+        };
+        canvasOfNodes.xRange[1] += nodeWidth;
+        canvasOfNodes.yRange[1] += nodeHeight;
+
+        var canvasOfGroups = {
+            xRange: [d3.min(gSelection, function (group) { return group.x; }), d3.max(selection, function (group) { return group.x + group.width; })],
+            yRange: [d3.min(gSelection, function (group) { return group.y; }), d3.max(selection, function (group) { return group.y + group.height; })]
+        };
 
         var canvasOfDragging = {
-            xRange: [d3.min(selection, function (group) { return group.x; }), d3.max(selection, function (group) { return group.x + group.width; })],
-            yRange: [d3.min(selection, function (group) { return group.y; }), d3.max(selection, function (group) { return group.y + group.height; })]
+        	xRange: [Math.min(canvasOfNodes.xRange[0], canvasOfGroups.xRange[0]), Math.max(canvasOfNodes.xRange[1], canvasOfGroups.xRange[1])],
+			yRange: [Math.min(canvasOfNodes.yRange[0], canvasOfGroups.yRange[0]), Math.max(canvasOfNodes.yRange[1], canvasOfGroups.yRange[1])]
         };
 
         var speed = 5;
-        if (xRange[0] > canvasOfDragging.xRange[0])
+        if (xRange[0] > canvasOfDragging.xRange[0] && xRange[1] >= canvasOfDragging.xRange[1])
             t.x = speed;
-        else if (xRange[1] < canvasOfDragging.xRange[1])
+        else if (xRange[1] < canvasOfDragging.xRange[1] && xRange[0] <= canvasOfDragging.xRange[0])
 			t.x = -speed;
-        if (yRange[0] > canvasOfDragging.yRange[0])
+        if (yRange[0] > canvasOfDragging.yRange[0] && yRange[1] >= canvasOfDragging.yRange[1])
             t.y = speed;
-        else if (yRange[1] < canvasOfDragging.yRange[1])
+        else if (yRange[1] < canvasOfDragging.yRange[1] && yRange[0] <= canvasOfDragging.yRange[0])
             t.y = -speed;
-        setTranslateSpeed(t.x, t.y);
-    };
-
-    
-    function onFinishToMoveGroups(group) {
-    	if (isResizingGroup == group){
-    		onFinishToResizeGroup(group);
-			return;
-    	}
-        posB4Drag = null;
-        group.dragging = false;
-        var groups = dataGroups.filter(function(g){return g.selected;}).concat(); // clone array of moved groups
-        if (!groups.length)
-            return;
-        groups.forEach(function (group) {
-            group.dragging = false;
-        });
-        var group = groups[0];
-        var deltaX = Math.round(group.x) - group.lastX;
-        var deltaY = Math.round(group.y) - group.lastY;
-        if (deltaX || deltaY){
-            moveGroups(groups, deltaX, deltaY);
-            setTranslateSpeed(0,0);
-        }
-    };
-
-    // check tap hold (only for touch devices)
-    var startTouchTime, 
-    	stillTouching, 
-    	touchMove = false;
-
-	function checkTapHold(nID) {
-		if (!touchMove && stillTouching && startTouchTime == nID) {
-			startTouchTime = 0;
-			touchMove = false; 
-			util.enableMultiSelection();   
-		}
-	}
-    
-	function onNodeDragStart (node) {
-		if (isTouchDevice && !util.isMultiSelection()){
-			startTouchTime = new Date().getTime();
-			touchMove = false
-			stillTouching = true;
-  			setTimeout(function(){
-  				checkTapHold(startTouchTime);
-  			}, 750);
-		}
-		console.log('dragstart')
-		var sourceEvent = d3.event.sourceEvent;
-		sourceEvent.stopPropagation();
-		var pos = util.getPosition(sourceEvent, svg.node());
-		target = sourceEvent.target;
-		if (target.classList.contains('partner-port')){
-			onStartRelLink(node, target, pos);
-			return;
-		}
-        var selection = dataNodes.filter(function(n){return n.selected;});
-        selection.forEach(function (n) {
-            n.lastX = n.x;
-            n.lastY = n.y;
-        });
-        posB4Drag = pos;
-    };
-	
-    function onNodeDrag (node) {
-    	var sourceEvent = d3.event.sourceEvent;
-    	sourceEvent.stopPropagation();
-    	var posOnDrag = util.getPosition(sourceEvent, svg.node());
-    	
-    	if (posB4Drag && (Math.abs(posOnDrag[0] - posB4Drag[0]) < 5 && Math.abs(posOnDrag[1] - posB4Drag[1]) < 5))
-            return;
-
-        if (isTouchDevice && !util.isMultiSelection())
-			touchMove = true;
-
-        if (isCreatingRel){
-    		onMoveRelLink(node, posOnDrag, sourceEvent);
-    		return;
-    	}
-        posB4Drag = null;
-        var xRange = xScale.domain(),
-            yRange = yScale.domain(),
-            t = { x: 0, y: 0 };
-        var selection = dataNodes.filter(function(n){return n.selected; });
-		selection.forEach(function (node) {
-            node.x = xScale.invert(d3.event.dx + xScale(node.x));
-            node.y = yScale.invert(d3.event.dy + yScale(node.y));
-			node.dragging = true;
-        });
-        // get area of dragging nodes and if it is out of range, the viewport will properly scroll
-        var canvasOfDragging = {
-            xRange: d3.extent(selection, function (n) { return n.x; }),
-            yRange: d3.extent(selection, function (n) { return n.y; })
-        };
-
-        var speed = 5;
-        if (xRange[0] > canvasOfDragging.xRange[0])
-            t.x = speed;
-        else if (xRange[1] < canvasOfDragging.xRange[1] + nodeWidth)
-			t.x = -speed;
-        if (yRange[0] > canvasOfDragging.yRange[0])
-            t.y = speed;
-        else if (yRange[1] < canvasOfDragging.yRange[1] + nodeHeight)
-            t.y = -speed;
-
 		setTranslateSpeed(t.x, t.y);		
     };
 
     
-    function onNodeDragEnd(node) {
-    	if (isTouchDevice && !util.isMultiSelection())
-    		stillTouching = false;    	
-
-    	d3.event.sourceEvent.stopPropagation();
-    	if (isCreatingRel){
-    		onEndRelLink(node);
-    		return;
-    	}
-
+    function onDragEndSelection(){
         posB4Drag = null;
-        var nodes = dataNodes.filter(function(n){return n.selected;}).concat(); // clone array of moved nodes
-        if (!nodes.length)
+        var objects = dataNodes.filter(function(n){return n.selected;}).slice(); // clone array of moved nodes
+        objects = objects.concat(dataGroups.filter(function(n){return n.selected;}).slice()); // clone array of moved nodes
+        objects.forEach(function (d) { d.dragging = false; });
+        
+        if (!objects.length)
             return;
-        nodes.forEach(function (node) {
-            node.dragging = false;
-        });
-        var node = nodes[0];
-        var deltaX = Math.round(node.x) - node.lastX;
-        var deltaY = Math.round(node.y) - node.lastY;
+        
+        var dragged = objects[0];
+        var deltaX = Math.round(dragged.x) - dragged.lastX;
+        var deltaY = Math.round(dragged.y) - dragged.lastY;
         if (deltaX || deltaY){
-            moveNodes(nodes, deltaX, deltaY);
+            moveObjects(objects, deltaX, deltaY);
             setTranslateSpeed(0,0);
         }
     };
@@ -1937,12 +1912,12 @@ var familyTree = function (isTouchDevice){
 		var d3Node = getD3Node(node),
 			triggerEl = d3.select(target);
 		
-		if (target && target.classList.contains('right')){
+		if (target && util.hasClass(target, 'right')){
 			if (d3Node)
 				d3Node.classed('rel-from', true);
 			tmpRelLink.fromNode = node.id;
 			isCreatingRel = 'right';
-		} else if (target && target.classList.contains('left')){
+		} else if (target && util.hasClass(target, 'left')){
 			if (d3Node)
 				d3Node.classed('rel-to', true);
 			tmpRelLink.toNode = node.id;
@@ -2035,10 +2010,31 @@ var familyTree = function (isTouchDevice){
     };
 
     function onStartChildLink(relLink){
-		if (!svg || svg.empty())
+		CtxMenuManager.hide();
+
+		var sourceEvent = d3.event.sourceEvent;
+		var isChildrenPort = util.hasClass(sourceEvent.target, 'children-port');
+		
+		if (isTouchDevice){
+			if (!isChildrenPort) {
+				if (!util.selectionMode.isMulti()){
+					startTouchTime = new Date().getTime();
+					touchMove = false
+					stillTouching = true;
+		  			setTimeout(function(){
+		  				checkTapHold(startTouchTime);
+		  			}, 750);
+		  		}
+	  			return;
+			}
+		}
+
+        if (!svg || svg.empty())
             return;
 
-        var sourceEvent = d3.event.sourceEvent;
+        if (!isChildrenPort)
+        	return;
+
         sourceEvent.stopPropagation();
 
         var pos = util.getPosition(sourceEvent, svg.node());
@@ -2063,11 +2059,14 @@ var familyTree = function (isTouchDevice){
 	};
 	
 	function onMoveChildLink(relLink){
+		if (isTouchDevice && !util.selectionMode.isMulti())
+			touchMove = true;
+
 		if (!isCreatingChild || !svg || svg.empty() )
             return;
 
         var ev = d3.event.sourceEvent;
-
+        
         if (isTouchDevice)
 			_detectIfTouchingOverNode(ev.touches[0]);
         
@@ -2107,13 +2106,16 @@ var familyTree = function (isTouchDevice){
 	};
 	
 	function onEndChildLink(node) {
+		if (isTouchDevice && !util.selectionMode.isMulti())
+			stillTouching = false;
+
 		var i = dataChildLinks.indexOf(tmpChildLink);
 		if (i != -1){
 			dataChildLinks.splice(i, 1);
 			drawChildLinks();
 		}
 
-		if (tmpChildLink.relId && tmpChildLink.childId)
+		if (tmpChildLink && tmpChildLink.relId && tmpChildLink.childId)
 			createChildLink(tmpChildLink.relId, tmpChildLink.childId);
 		if (!svg || svg.empty())
 			return;
@@ -2780,48 +2782,25 @@ var familyTree = function (isTouchDevice){
 		return node;
     }
 
-	function moveNodes(nodes, deltaX, deltaY) {
+    function moveObjects(objects, deltaX, deltaY) {
         if (isNaN(deltaX) || isNaN(deltaY)) {
             console.error('moving nodes to NaN', nodes);
             return;
         }
         HistoryManager.execute(
-            function () { doMoveNodes(nodes, deltaX, deltaY); }, 
-			function () { doMoveNodes(nodes, -deltaX, -deltaY); }
+            function () { doMoveObjects(objects, deltaX, deltaY); }, 
+			function () { doMoveObjects(objects, -deltaX, -deltaY); }
         );
     };
 	
-	function doMoveNodes(nodes, deltaX, deltaY){
-		if (!nodes || !nodes.length)
+	function doMoveObjects(objects, deltaX, deltaY){
+		if (!objects || !objects.length)
 			return;		
-		nodes.forEach(function(node){
-			node.x = node.lastX + deltaX;
-			node.y = node.lastY + deltaY;
-			node.lastX = node.x;
-			node.lastY = node.y;
-		});
-		update();
-	};
-
-	function moveGroups(groups, deltaX, deltaY) {
-        if (isNaN(deltaX) || isNaN(deltaY)) {
-            console.error('moving groups to NaN', groups);
-            return;
-        }
-        HistoryManager.execute(
-            function () { doMoveGroups(groups, deltaX, deltaY); }, 
-			function () { doMoveGroups(groups, -deltaX, -deltaY); }
-        );
-    };
-	
-	function doMoveGroups(groups, deltaX, deltaY){
-		if (!groups || !groups.length)
-			return;	
-		groups.forEach(function(group){
-			group.x = group.lastX + deltaX;
-			group.y = group.lastY + deltaY;
-			group.lastX = group.x;
-			group.lastY = group.y;
+		objects.forEach(function(object){
+			object.x = object.lastX + deltaX;
+			object.y = object.lastY + deltaY;
+			object.lastX = object.x;
+			object.lastY = object.y;
 		});
 		update();
 	};
@@ -3047,6 +3026,7 @@ var familyTree = function (isTouchDevice){
 						else
 							deselectGroup(group);
 					});
+					util.selectionMode.updateSelectedCounter(getSelectionCount());
 					update();
 			    })
 				.on('brushend', endBrush);	
@@ -3814,20 +3794,15 @@ var familyTree = function (isTouchDevice){
 		update: update,
 		load: load,
 		hideContextMenus: function(){ CtxMenuManager.hide(); },
+		getSelectionCount: getSelectionCount,
 		centerSelection: centerSelection,
 		centerAll: centerAll,
 		selectAll: selectAll,
+		deselectAll: deselectAll,
 		isMovingBrush: isMovingBrush,
 		getBrushLayer: getBrushLayer,
 		startBrush: startBrush,
 		endBrush: endBrush,
-		getSelection: function(){
-			var groups = dataGroups.filter(function(d){return d.selected == true;}),
-				nodes = dataNodes.filter(function(d){return d.selected == true;}),
-	    		rLinks = dataRelLinks.filter(function(d){return d.selected == true;}),
-	    		cLinks = dataChildLinks.filter(function(d){return d.selected == true;});
-			return nodes.concat(rLinks.concat(cLinks.concat(groups)));
-		},
 		getObjectsToDelete: getObjectsToDelete,
 		deleteObjects: deleteObjects,
 		saveAs: saveAs,
