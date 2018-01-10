@@ -270,16 +270,57 @@ var util = (function(){
 
 	var isMultiSelection = false;
 
-	var enableMultiSelectionBar = function(){
-		$('#selection-in-touch-device').removeClass('hide');
-		$('#main-family-tree-navbar').addClass('hide');
-		isMultiSelection = true;
+	var selectionMode = {
+		isMulti: function(){ return isMultiSelection; },
+		enableMulti: function(isTouchDevice){
+			if (isTouchDevice){
+				var sitdNavbar = $('#selection-in-touch-device'),
+					mftNavbar = $('#main-family-tree-navbar'),
+					mftBtnMenu = $('button[data-target="#main-navbar-collapse"]');
+				sitdNavbar.removeClass('hide');
+				mftNavbar.addClass('hide');
+			} 
+			isMultiSelection = true;
+		},
+		disableMulti: function(isTouchDevice){
+			if (isTouchDevice){
+				var sitdNavbar = $('#selection-in-touch-device'),
+					mftNavbar = $('#main-family-tree-navbar'),
+					mftBtnMenu = $('button[data-target="#main-navbar-collapse"]');
+				mftNavbar.removeClass('hide'); 
+				sitdNavbar.addClass('hide');
+				console.log('button expanded', mftBtnMenu.attr('aria-expanded'));
+			}
+			isMultiSelection = false;
+		},
+		updateSelectedCounter: function(count){
+			$('#selection-counter-menu a.dropdown-toggle span').html(count);
+		}
 	};
 
-	var disableMultiSelectionBar = function(){
-		$('#selection-in-touch-device').addClass('hide');
-		$('#main-family-tree-navbar').removeClass('hide');
-		isMultiSelection = false;
+	var getAncestorByClass = function(element, className, rootAncestor){
+		if (!element || !className)
+			return element;
+
+		function condition(el) {
+			var c = element && element.classList && !element.classList.contains(className);
+			if (rootAncestor)
+				c = c && element != rootAncestor;
+			return c;
+		};
+
+		while (condition(element))
+			element = element.parentNode;
+
+		return element;
+	};
+
+	var hasClass = function(element, className){
+		if (!element || !className)
+			return false;
+		if (element && element.classList && element.classList.contains(className))
+			return true;
+		return false;
 	};
 
 	return {
@@ -287,8 +328,8 @@ var util = (function(){
 		color: color(),
 		tree: tree(),
 		getPosition: getPosition,
-		isMultiSelection: function(){return isMultiSelection; },
-		enableMultiSelection: enableMultiSelectionBar,
-		disableMultiSelection: disableMultiSelectionBar
+		selectionMode: selectionMode,
+		getAncestorByClass: getAncestorByClass,
+		hasClass: hasClass
 	}
 })();
