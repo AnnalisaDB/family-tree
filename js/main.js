@@ -42,7 +42,8 @@ function deleteElements(){
 	FamilyTree.deleteObjects(
 		objects.nodes, 
 		objects.relLinks, 
-		objects.childLinks, 
+		objects.childLinks,
+		objects.groups,
 		function(){ FamilyTree.draw(); }, 
 		function(){ FamilyTree.draw(); }, 
 		function(){ FamilyTree.draw(); }
@@ -103,14 +104,20 @@ if (!isTouchDevice){
 				// REDO
 				else if (d3.event.keyCode == Keys.Y)
 					redo();
+
+				else
+					util.selectionMode.enableMulti(isTouchDevice);
 			}
 		})
-		.on('onkeyup', function() {
+		.on('keyup', function() {
 			if (d3.event.target.tagName.toLowerCase() == 'input')
 				return;
 
 			if (!d3.event.shiftKey && FamilyTree.isMovingBrush())
 				FamilyTree.endBrush();
+
+			if (!d3.event.ctrlKey && util.selectionMode.isMulti())
+				util.selectionMode.disableMulti();
 		});
 }
 
@@ -119,7 +126,7 @@ document.body.onresize = onResize;
 FamilyTree.init(viewport, document.body.clientWidth, document.body.clientHeight);
 onResize();
 
-var eventStart = isTouchDevice ? 'touchstart' : 'click';
+var eventStart = isTouchDevice ? 'touchstart' : 'mousedown';
 
 var mainCollapsableNavbar = $('#main-navbar-collapse'),
 	treeNameItem = $('#loaded-tree-name'),
@@ -296,7 +303,7 @@ saveAsPopup.find('#save').on(eventStart, function(){
 
 // edit
 $('#edit-menu').on(eventStart, function (){
-	var selection = FamilyTree.getSelection(),
+	var selection = FamilyTree.getSelectionCount(),
 		count = selection.length;
 	if (count)
 		deleteMenuItem.removeClass('disabled');
@@ -351,7 +358,7 @@ $('#selection-area-item').on(eventStart, function(){
 
 //view
 $('#view-menu').on(eventStart, function(){
-	var count = FamilyTree.getSelection().length;
+	var count = FamilyTree.getSelectionCount();
 	if (count)
 		centerSelItem.removeClass('disabled');
 	else
@@ -403,17 +410,33 @@ $('#viewport').on(eventStart, function(){
 
 // multi selection navbar
 $('#exit-from-selection-mode a').on(eventStart, function(){
-	util.disableMultiSelection();
+	util.selectionMode.disableMulti(isTouchDevice);
+	FamilyTree.deselectAll();
+	if (isTouchDevice && mainCollapsableNavbar.is(':visible'))
+		mainCollapsableNavbar.collapse('toggle');
 });
 
-$('#delete-selected-objects a').on(eventStart, function(){
+$('#delete-selected-objects a').on(isTouchDevice ? 'touchend' : 'click', function(){
 	deleteElements();
-	util.disableMultiSelection();
+	util.selectionMode.disableMulti(isTouchDevice);
+	/*if (isTouchDevice && mainCollapsableNavbar.is(':visible'))
+		mainCollapsableNavbar.collapse('toggle');*/
 });
 
-$('#center-selected-objects a').on(eventStart, function(){
+$('#center-selected-objects a').on(isTouchDevice ? 'touchend' : 'click', function(){
 	FamilyTree.centerSelection();
-	util.disableMultiSelection();	
+	util.selectionMode.disableMulti(isTouchDevice);	
+	FamilyTree.deselectAll();
+	/*if (isTouchDevice && mainCollapsableNavbar.is(':visible'))
+		mainCollapsableNavbar.collapse('toggle');*/
+});
+
+$('#select-all-objects').on(isTouchDevice ? 'touchend' : 'click', function(){
+	FamilyTree.selectAll();
+});
+
+$('#deselect-all-objects').on(isTouchDevice ? 'touchend' : 'click', function(){
+	FamilyTree.deselectAll();
 });
 
 $(document).on('action', function(ev, action, undoCounter, redoCounter){
