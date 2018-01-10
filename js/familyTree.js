@@ -1781,10 +1781,7 @@ var familyTree = function (isTouchDevice){
             return;
 
         posB4Drag = null;
-        var xRange = xScale.domain(),
-            yRange = yScale.domain(),
-            t = { x: 0, y: 0 };
-        
+
         function updatePosition(d){
 			d.x = xScale.invert(dx + xScale(d.x));
             d.y = yScale.invert(dy + yScale(d.y));
@@ -1795,24 +1792,24 @@ var familyTree = function (isTouchDevice){
         nSelection.forEach(updatePosition);
         var gSelection = dataGroups.filter(function(g){return g.selected; });
 		gSelection.forEach(updatePosition);
-        
+		update();
+        /*
+        var xRange = xScale.domain(),
+            yRange = yScale.domain(),
+            t = { x: 0, y: 0 };
+
         // get area of dragging nodes+groups and if it is out of range, the viewport will properly scroll
-        var canvasOfNodes = {
+        var canvasOfDragging = {
             xRange: d3.extent(nSelection, function (n) { return n.x; }),
             yRange: d3.extent(nSelection, function (n) { return n.y; })
         };
-        canvasOfNodes.xRange[1] += nodeWidth;
-        canvasOfNodes.yRange[1] += nodeHeight;
+        canvasOfDragging.xRange[1] += nodeWidth;
+        canvasOfDragging.yRange[1] += nodeHeight;
 
-        var canvasOfGroups = {
-            xRange: [d3.min(gSelection, function (group) { return group.x; }), d3.max(selection, function (group) { return group.x + group.width; })],
-            yRange: [d3.min(gSelection, function (group) { return group.y; }), d3.max(selection, function (group) { return group.y + group.height; })]
-        };
-
-        var canvasOfDragging = {
-        	xRange: [Math.min(canvasOfNodes.xRange[0], canvasOfGroups.xRange[0]), Math.max(canvasOfNodes.xRange[1], canvasOfGroups.xRange[1])],
-			yRange: [Math.min(canvasOfNodes.yRange[0], canvasOfGroups.yRange[0]), Math.max(canvasOfNodes.yRange[1], canvasOfGroups.yRange[1])]
-        };
+        canvasOfDragging.xRange[0] = Math.min(canvasOfDragging.xRange[0], d3.min(gSelection, function (group) { return group.x; }));
+        canvasOfDragging.xRange[1] = Math.max(canvasOfDragging.xRange[1], d3.max(selection, function (group) { return group.x + group.width; }));
+        canvasOfDragging.yRange[0] = Math.min(canvasOfDragging.yRange[0], d3.min(gSelection, function (group) { return group.y; }));
+        canvasOfDragging.yRange[1] = Math.max(canvasOfDragging.yRange[1], d3.max(selection, function (group) { return group.y + group.height; }));
 
         var speed = 5;
         if (xRange[0] > canvasOfDragging.xRange[0] && xRange[1] >= canvasOfDragging.xRange[1])
@@ -1823,7 +1820,7 @@ var familyTree = function (isTouchDevice){
             t.y = speed;
         else if (yRange[1] < canvasOfDragging.yRange[1] && yRange[0] <= canvasOfDragging.yRange[0])
             t.y = -speed;
-		setTranslateSpeed(t.x, t.y);		
+		setTranslateSpeed(t.x, t.y);*/	
     };
 
     
@@ -1841,7 +1838,7 @@ var familyTree = function (isTouchDevice){
         var deltaY = Math.round(dragged.y) - dragged.lastY;
         if (deltaX || deltaY){
             moveObjects(objects, deltaX, deltaY);
-            setTranslateSpeed(0,0);
+            update();//setTranslateSpeed(0,0);
         }
     };
 		
