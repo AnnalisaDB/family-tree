@@ -137,38 +137,7 @@
 		<script src="js/contextMenuManager.js" type="text/javascript"></script>
 		<script src="js/familyTree.js" type="text/javascript"></script>
 	</head>
-	<body>
-		<nav id="selection-in-touch-device" class = "hide navbar navbar-inverse">
-			<ul class = "nav navbar-nav">
-				<li id="exit-from-selection-mode">
-					<a href = "#">
-						<i class="glyphicon fa fa-arrow-left"></i>
-					</a>
-				</li>
-				<li class = "dropdown" id="selection-counter-menu">
-					<a href = "#" class = "dropdown-toggle" data-toggle = "dropdown"><span># selected</span> <b class = "caret"></b></a>
-					<ul class = "dropdown-menu">
-						<li>
-							<a href = "#" id="select-all-objects">
-								<span class="item-text">Select all</span>
-							</a>
-						</li>
-					</ul>
-				</li>
-			</ul>
-			<ul class = "nav navbar-nav navbar-right">
-				<li id="delete-selected-objects">
-					<a href = "#">
-						<span class="glyphicon glyphicon-trash"></span>
-					</a>
-				</li>
-				<li id="center-selected-objects">
-					<a href = "#">
-						<i class="glyphicon fa fa-bullseye"></i>
-					</a>
-				</li>
-			</ul>
-		</nav>
+	<body>		
 		<nav id="main-family-tree-navbar" class = "navbar navbar-default navbar-inverse" role = "navigation">   
 		   <div class = "navbar-header">
 				<button type = "button" class = "navbar-toggle" data-toggle = "collapse" data-target = "#main-navbar-collapse">
@@ -266,6 +235,40 @@
 					</li>
 				</ul>
 		   </div>
+		</nav>
+		<nav id="selection-in-touch-device" class = "hide navbar navbar-inverse">
+			<ul class = "nav navbar-nav">
+				<li id="exit-from-selection-mode">
+					<a href = "#">
+						<i class="glyphicon fa fa-arrow-left"></i>
+					</a>
+				</li>
+				<li class = "dropdown" id="selection-counter-menu">
+					<a href = "#" class = "dropdown-toggle" data-toggle = "dropdown"><span>#</span> <b class = "caret"></b></a>
+					<ul class = "dropdown-menu">
+						<li>
+							<a href = "#" id="select-all-objects">
+								<span class="item-text">Select all</span>
+							</a>
+							<a href = "#" id="deselect-all-objects">
+								<span class="item-text">Deselect all</span>
+							</a>
+						</li>
+					</ul>
+				</li>
+			</ul>
+			<ul class = "nav navbar-nav navbar-right">
+				<li id="delete-selected-objects">
+					<a href = "#">
+						<span class="glyphicon glyphicon-trash"></span>
+					</a>
+				</li>
+				<li id="center-selected-objects">
+					<a href = "#">
+						<i class="glyphicon fa fa-bullseye"></i>
+					</a>
+				</li>
+			</ul>
 		</nav>
 		<nav class = "navbar navbar-default navbar-inverse tree-name">
 			<div class = "navbar-header">
