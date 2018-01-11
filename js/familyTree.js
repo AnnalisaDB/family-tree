@@ -537,7 +537,7 @@ var familyTree = function (isTouchDevice){
 				.on('mousedown', onMouseDownNode);
 		}
 			
-		CtxMenuManager.onRightClick('node', isTouchDevice ? nodes.selectAll('.open-context-menu') : nodes, svg, {
+		CtxMenuManager.addEvents('node', isTouchDevice ? nodes.selectAll('.open-context-menu') : nodes, svg, {
 			getSelectionCount: getSelectionCount,
 			updateItems: function(){
 				_updateAddToGroupsItem();
@@ -970,7 +970,7 @@ var familyTree = function (isTouchDevice){
 		if (isTouchDevice){
 			textarea.on('touchstart', onTouchStartGroup);
 
-			CtxMenuManager.onRightClick('group', textarea.select('.open-context-menu'), svg, {
+			CtxMenuManager.addEvents('group', textarea.select('.open-context-menu'), svg, {
 				getSelectionCount: getSelectionCount
 			});
 		} else {
@@ -980,7 +980,7 @@ var familyTree = function (isTouchDevice){
 	            .on('mouseout', onMouseOutGroup);
 
 			// Add event listeners
-			CtxMenuManager.onRightClick('group', textarea, svg, { 
+			CtxMenuManager.addEvents('group', textarea, svg, { 
 				getSelectionCount: getSelectionCount
 			});
         }
@@ -3065,7 +3065,7 @@ var familyTree = function (isTouchDevice){
 			container: svg
 		});
 
-		CtxMenuManager.onRightClick(null, isTouchDevice ? svg.select('#open-bg-context-menu') : panArea, svg);
+		CtxMenuManager.addEvents(null, isTouchDevice ? svg.select('#open-bg-context-menu') : panArea, svg);
 
 		CtxMenuManager.initNodeMenu({
 			delete: function(){
