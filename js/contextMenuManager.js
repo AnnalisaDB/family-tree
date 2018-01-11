@@ -31,42 +31,67 @@ var contextMenuManager = function(isTouchDevice){
 		resetGroupMenu();
 	};
 
+	function createBackgroundMenu(){
+		var menuHtml = '<ul class="dropdown-menu" role="menu">'
+					+ '   <li><a tabindex="-1" href="#" id="create-node">'
+					+ '      <i class="glyphicon fa fa-user-plus"></i>'
+					+ '      <span class="item-text">Create relative</span>...'
+					+ '   </a></li>'
+					+ '	  <li><a tabindex="-1" href="#" id="create-group">'
+					+ '      <i class="glyphicon fa fa-users"></i>'
+					+ '      <span class="item-text">Create group</span>...'
+					+ '   </a></li>'
+					+ '   <li class="divider"></li>'
+					+ '   <li><a tabindex="-1" href="#" id="select-all">'
+					+ '      <span class="cmd-text">Ctrl+A</span>'
+					+ '      <span style="display: inline-block;">Select all</span>'
+					+ '   </a></li>'
+					+ '</ul>';
+		bgCtxMenu = $('<div>', { id: 'bgContextMenu' });
+		bgCtxMenu.addClass('dropdown clearfix');
+		bgCtxMenu.html(menuHtml);
+		$('#main-script').before(bgCtxMenu);
+
+		if (isTouchDevice)
+			$('.cmd-text:not(.caret-right),#selection-area-item').addClass('hide');
+	};
+
 	function initBackgroundMenu(applyCallbacks, onRightClickTo){
 		applyCallbacks = applyCallbacks || {};
 		onRightClickTo = onRightClickTo || {};
 
 		bgCtxMenu = $('#bgContextMenu');
+
+		if (!bgCtxMenu || !bgCtxMenu.length)
+			createBackgroundMenu();
 		
-		if (bgCtxMenu && bgCtxMenu.html() !== undefined){
+		bgCtxMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function() {
+			var id = $(this).attr('id');
+			if (id == 'create-node' || id == 'create-group'){
+				var left = +bgCtxMenu.css('left').replace('px',''), 
+					top = +bgCtxMenu.css('top').replace('px',''); 
+				
+				var type = id.substring(7);
 
-			bgCtxMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function() {
-				var id = $(this).attr('id');
-				if (id == 'create-node' || id == 'create-group'){
-					var left = +bgCtxMenu.css('left').replace('px',''), 
-						top = +bgCtxMenu.css('top').replace('px',''); 
-					
-					var type = id.substring(7);
+				if (applyCallbacks.editNewObject)
+					applyCallbacks.editNewObject(type, left, top);
 
-					if (applyCallbacks.editNewObject)
-						applyCallbacks.editNewObject(type, left, top);
-
-					var popup = $('#' + type + '-popup');
-					if (popup.length !== 0) {
-						var mainCollapsableNavbar = $('#main-navbar-collapse');
-						if (isTouchDevice && mainCollapsableNavbar.is(':visible')){
-							mainCollapsableNavbar.collapse('toggle');
-							mainCollapsableNavbar.one('hidden.bs.collapse', function(){
-								popup.modal();
-							});
-						} else 
+				var popup = $('#' + type + '-popup');
+				if (popup.length !== 0) {
+					var mainCollapsableNavbar = $('#main-navbar-collapse');
+					if (isTouchDevice && mainCollapsableNavbar.is(':visible')){
+						mainCollapsableNavbar.collapse('toggle');
+						mainCollapsableNavbar.one('hidden.bs.collapse', function(){
 							popup.modal();
-					}
+						});
+					} else 
+						popup.modal();
 				}
-				else if (id == 'select-all' && applyCallbacks.selectAll)
-					applyCallbacks.selectAll();
-				bgCtxMenu.hide();
-			});
-		}
+			}
+			else if (id == 'select-all' && applyCallbacks.selectAll)
+				applyCallbacks.selectAll();
+			bgCtxMenu.hide();
+		});
 	};
 
 	function resetBackgroundMenu(){
@@ -92,31 +117,72 @@ var contextMenuManager = function(isTouchDevice){
 		});
 	};
 
+	function createGroupMenu(){
+		var menuHtml = '<ul class="dropdown-menu" role="menu">'
+					+ '   <li><a tabindex="-1" href="#" id="selection" class="disabled"></a></li>'
+					+ '   <li class="divider"></li>'
+					+ '   <li><a tabindex="-1" href="#" id="details-group" class="hide">'
+					+ '      <span class="glyphicon glyphicon-info-sign"></span>'
+					+ '      <span class="item-text">Show info</span>'
+					+ '   </a></li>'
+					+ '   <li><a tabindex="-1" href="#" id="edit-group">'
+					+ '      <span class="glyphicon glyphicon-pencil"></span>'
+					+ '      <span class="item-text">Edit</span>...'
+					+ '   </a></li>'
+					+ '   <li class="divider"></li>'
+					+ '   <li><a tabindex="-1" href="#" id="delete">'
+					+ '      <span class="cmd-text">Del</span>'
+					+ '      <span class="glyphicon glyphicon-trash"></span>'
+					+ '      <span class="item-text">Delete</span>'
+					+ '   </a></li>'
+					+ '   <li class="divider"></li>'
+					+ '   <li><a tabindex="-1" href="#" id="center-selection">'
+					+ '      <span class="cmd-text">S</span>'
+					+ '      <i class="glyphicon fa fa-bullseye"></i>'
+					+ '      <span class="item-text">Center selection</span>'
+					+ '   </a></li>'
+					+ '   <li><a tabindex="-1" href="#" id="center-all">'
+					+ '      <span class="cmd-text">E</span>'
+					+ '      <span class="glyphicon glyphicon-fullscreen"></span>'
+					+ '      <span class="item-text">Extend</span>'
+					+ '   </a></li>'
+					+ '</ul>';
+		groupCtxMenu = $('<div>', { id: 'groupContextMenu' });
+		groupCtxMenu.addClass('dropdown clearfix');
+		groupCtxMenu.html(menuHtml);
+		$('#main-script').before(groupCtxMenu);
+
+		if (isTouchDevice){
+			$('.cmd-text:not(.caret-right),#selection-area-item').addClass('hide');
+			$('#details-group').removeClass('hide');
+		}
+	};
+
 	function initGroupMenu(applyCallbacks){
 		applyCallbacks = applyCallbacks || {};
 
 		groupCtxMenu = $('#groupContextMenu');
 
-		if (groupCtxMenu && groupCtxMenu.html() !== undefined){
+		if (!groupCtxMenu || !groupCtxMenu.length)
+			createGroupMenu();
+
+		groupCtxMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function(ev) {
+			var id = $(this).attr('id');
 			
-			groupCtxMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function(ev) {
-				var id = $(this).attr('id');
-				
-				if (id == 'delete' && applyCallbacks.delete){
-					applyCallbacks.delete();
-				} else if (id == 'edit-group'){
-					var popup = $('#group-popup');
-					popup.modal();
-				} else if (id == 'center-selection' && applyCallbacks.centerSelection)
-					applyCallbacks.centerSelection();
-				else if (id == 'center-all' && applyCallbacks.centerAll)
-					applyCallbacks.centerAll();
-				else if (id == 'details-group' && applyCallbacks.showInfo)
-					applyCallbacks.showInfo(groupCtxMenu.groupId)
-				
-				groupCtxMenu.hide();
-			});
-		}
+			if (id == 'delete' && applyCallbacks.delete){
+				applyCallbacks.delete();
+			} else if (id == 'edit-group'){
+				var popup = $('#group-popup');
+				popup.modal();
+			} else if (id == 'center-selection' && applyCallbacks.centerSelection)
+				applyCallbacks.centerSelection();
+			else if (id == 'center-all' && applyCallbacks.centerAll)
+				applyCallbacks.centerAll();
+			else if (id == 'details-group' && applyCallbacks.showInfo)
+				applyCallbacks.showInfo(groupCtxMenu.groupId)
+			
+			groupCtxMenu.hide();
+		});
 	};
 
 	function resetGroupMenu(){
@@ -151,20 +217,81 @@ var contextMenuManager = function(isTouchDevice){
 						field.trigger('change');
 				}
 			});
-			
-			if (getSelectionCount){
-				var count = getSelectionCount();
-				groupCtxMenu.find('#selection').html( getSelectionCount() + ' ' + dictionary.get('selectedItems'));
-			}
-			
 			groupCtxMenu.css({
 				left: x,
 				top: y
 			});
 			
 			_setCtxMenuPosition(groupCtxMenu, x, y, d3container);
-			groupCtxMenu.slideDown({duration: 200});
+			
+			setTimeout(function(){
+				if (getSelectionCount){
+					var count = getSelectionCount();
+					groupCtxMenu.find('#selection').html( getSelectionCount() + ' ' + dictionary.get('selectedItems'));
+				}
+			}, 0);	
+			
+			groupCtxMenu.slideDown({duration: 200});		
 		});
+	};
+
+	function createNodeMenu(){
+		var menuHtml = '<ul class="dropdown-menu" role="menu">'
+					+ '   <li><a tabindex="-1" href="#" id="selection" class="disabled"></a></li>'
+					+ '   <li class="divider"></li>'
+					+ '   <li><a tabindex="-1" href="#" id="details-node" class="hide">'
+					+ '      <span class="glyphicon glyphicon-info-sign"></span>'
+					+ '      <span class="item-text">Show info</span>'
+					+ '   </a></li>'
+					+ '   <li><a tabindex="-1" href="#" id="edit-node">'
+					+ '      <span class="glyphicon glyphicon-pencil"></span>'
+					+ '      <span class="item-text">Edit</span>...'
+					+ '   </a></li>'
+					+ '   <li class="divider"></li>'
+					+ '   <li><a tabindex="-1" href="#" id="delete">'
+					+ '      <span class="cmd-text">Del</span>'
+					+ '      <span class="glyphicon glyphicon-trash"></span>'
+					+ '      <span class="item-text">Delete</span>'
+					+ '   </a></li>'
+					+ '   <li class="divider"></li>'
+					+ '   <li><a tabindex="-1" href="#" id="center-selection">'
+					+ '      <span class="cmd-text">S</span>'
+					+ '      <i class="glyphicon fa fa-bullseye"></i>'
+					+ '      <span class="item-text">Center selection</span>'
+					+ '   </a></li>'
+					+ '   <li><a tabindex="-1" href="#" id="center-all">'
+					+ '      <span class="cmd-text">E</span>'
+					+ '      <span class="glyphicon glyphicon-fullscreen"></span>'
+					+ '      <span class="item-text">Extend</span>'
+					+ '   </a></li>'
+					+ '   <li class="divider"></li>'
+					+ '   <li><a tabindex="-1" href="#" id="link-to-partner">Link to partner</a></li>'
+					+ '   <li class="dropdown-submenu">'
+					+ '      <a tabindex="-1" href="#" id="add-to-group">'
+					+ '         <span class="cmd-text caret-right"></span>'
+					+ '         <span class="item-text">Add to group</span>'
+					+ '      </a>'
+					+ '      <ul class="dropdown-menu"><li>'
+					+ '         <a href="#" id="add-to-new-group"><span class="item-text">New group</span>...</a>'
+					+ '      </li></ul>'
+					+ '   <li class="dropdown-submenu">'
+					+ '      <a tabindex="-1" href="#" id="remove-from-group">'
+					+ '         <span class="cmd-text caret-right"></span>'
+					+ '         <span class="item-text">Remove from group</span>'
+					+ '      </a>'
+					+ '      <ul class="dropdown-menu"></ul>'
+					+ '   </li>'
+					+ '</ul>';
+
+		nodeCtxMenu = $('<div>', { id: 'nodeContextMenu' });
+		nodeCtxMenu.addClass('dropdown clearfix');
+		nodeCtxMenu.html(menuHtml);
+		$('#main-script').before(nodeCtxMenu);
+
+		if (isTouchDevice){
+			$('.cmd-text:not(.caret-right),#selection-area-item').addClass('hide');
+			$('#details-node').removeClass('hide');
+		}
 	};
 
 	function initNodeMenu(applyCallbacks){
@@ -172,77 +299,77 @@ var contextMenuManager = function(isTouchDevice){
 
 		nodeCtxMenu = $('#nodeContextMenu');
 
-		if (nodeCtxMenu && nodeCtxMenu.html() !== undefined){
+		if (!nodeCtxMenu || !nodeCtxMenu.length)
+			createNodeMenu();
 
-			nodeCtxMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function() {
-				nodeCtxMenu.find('#add-to-group, #remove-from-group').each(function(){
-					var groupsList = $(this).next('ul');
-					if (groupsList.is(':visible'))
-						groupsList
-							.removeClass('dropdown-menu-left')
-							.removeClass('dropdown-menu-up')
-							.hide();
-				});
-				var id = $(this).attr('id');
-				if (id == 'delete' && applyCallbacks.delete)
-					applyCallbacks.delete();
-				else if (id == 'details-node' && applyCallbacks.showInfo)
-					applyCallbacks.showInfo(nodeCtxMenu.nodeId);
-				else if (id == 'edit-node' && applyCallbacks.editNode)
-					applyCallbacks.editNode()
-				else if (id == 'center-selection' && applyCallbacks.centerSelection)
-					applyCallbacks.centerSelection(); 
-				else if (id == 'center-all' && applyCallbacks.centerAll)
-					applyCallbacks.centerAll();
-				else if (id == 'link-to-partner' && applyCallbacks.linkToPartner)
-					applyCallbacks.linkToPartner();
-				else if (id == 'add-to-group' || id == 'remove-from-group'){
-					if (isTouchDevice)
-						return;
-					event.stopPropagation();
-					event.preventDefault();
-				} else if ((id == 'add-to-new-group' || id.indexOf('add-to-existing-group-') != -1) || 
-						(id == 'remove-from-group' || id.indexOf('remove-from-existing-group-') != -1)){
-					var el = this;
-					while (el && el.className.indexOf('dropdown-menu') == -1)
-						el = el.parentNode;
-					if (el)
-						$(el).hide();
-					if (id == 'add-to-new-group'){
-						var left = +nodeCtxMenu.css('left').replace('px',''), 
-						top = +nodeCtxMenu.css('top').replace('px',''); 
-						if (applyCallbacks.getTmpGroup)
-							tmpGroup = applyCallbacks.getTmpGroup(left, top)
-						$('#group-popup').modal();
-					}
+		nodeCtxMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function() {
+			nodeCtxMenu.find('#add-to-group, #remove-from-group').each(function(){
+				var groupsList = $(this).next('ul');
+				if (groupsList.is(':visible'))
+					groupsList
+						.removeClass('dropdown-menu-left')
+						.removeClass('dropdown-menu-up')
+						.hide();
+			});
+			var id = $(this).attr('id');
+			if (id == 'delete' && applyCallbacks.delete)
+				applyCallbacks.delete();
+			else if (id == 'details-node' && applyCallbacks.showInfo)
+				applyCallbacks.showInfo(nodeCtxMenu.nodeId);
+			else if (id == 'edit-node' && applyCallbacks.editNode)
+				applyCallbacks.editNode()
+			else if (id == 'center-selection' && applyCallbacks.centerSelection)
+				applyCallbacks.centerSelection(); 
+			else if (id == 'center-all' && applyCallbacks.centerAll)
+				applyCallbacks.centerAll();
+			else if (id == 'link-to-partner' && applyCallbacks.linkToPartner)
+				applyCallbacks.linkToPartner();
+			else if (id == 'add-to-group' || id == 'remove-from-group'){
+				if (isTouchDevice)
+					return;
+				event.stopPropagation();
+				event.preventDefault();
+			} else if ((id == 'add-to-new-group' || id.indexOf('add-to-existing-group-') != -1) || 
+					(id == 'remove-from-group' || id.indexOf('remove-from-existing-group-') != -1)){
+				var el = this;
+				while (el && el.className.indexOf('dropdown-menu') == -1)
+					el = el.parentNode;
+				if (el)
+					$(el).hide();
+				if (id == 'add-to-new-group'){
+					var left = +nodeCtxMenu.css('left').replace('px',''), 
+					top = +nodeCtxMenu.css('top').replace('px',''); 
+					if (applyCallbacks.getTmpGroup)
+						tmpGroup = applyCallbacks.getTmpGroup(left, top)
+					$('#group-popup').modal();
 				}
-				nodeCtxMenu.hide();
+			}
+			nodeCtxMenu.hide();
+		});
+
+		var groupsListItems = nodeCtxMenu.find('#add-to-group, #remove-from-group');
+
+		if (isTouchDevice){
+			groupsListItems.on('touchstart', function() {
+				var groupsListMenu = $(this).next('ul');
+				_updateGroupsListPosition(groupsListMenu);
+				groupsListMenu.slideDown({duration: 200});									
+			});
+		} else {
+			groupsListItems.on('mouseover', function(){
+				var groupsListMenu = $(this).next('ul');
+				groupsListMenu.slideDown({duration: 200});
+				_updateGroupsListPosition(groupsListMenu);
 			});
 
-			var groupsListItems = nodeCtxMenu.find('#add-to-group, #remove-from-group');
-
-			if (isTouchDevice){
-				groupsListItems.on('touchstart', function() {
-					var groupsListMenu = $(this).next('ul');
-					_updateGroupsListPosition(groupsListMenu);
-					groupsListMenu.slideDown({duration: 200});									
-				});
-			} else {
-				groupsListItems.on('mouseover', function(){
-					var groupsListMenu = $(this).next('ul');
-					groupsListMenu.slideDown({duration: 200});
-					_updateGroupsListPosition(groupsListMenu);
-				});
-
-				groupsListItems.on('mouseout', function(ev){
-					var el = ev.toElement;
-					var ul = $(this).next('ul');
-					while (el && el != this.parentNode)
-						el = el.parentNode;
-					if (!el)
-						ul.hide();
-				});
-			}
+			groupsListItems.on('mouseout', function(ev){
+				var el = ev.toElement;
+				var ul = $(this).next('ul');
+				while (el && el != this.parentNode)
+					el = el.parentNode;
+				if (!el)
+					ul.hide();
+			});
 		}
 	};
 
@@ -401,17 +528,20 @@ var contextMenuManager = function(isTouchDevice){
 			if (updateItems)
 				updateItems();
 
-			if (getSelectionCount){
-				var count = getSelectionCount();
-				nodeCtxMenu.find('#selection').html( getSelectionCount() + ' ' + dictionary.get('selectedItems'));
-			}
-			
 			nodeCtxMenu.css({
 				left: x,
 				top: y
 			});
 			
 			_setCtxMenuPosition(nodeCtxMenu, x, y, d3container);
+
+			setTimeout(function(){
+				if (getSelectionCount){
+					var count = getSelectionCount();
+					nodeCtxMenu.find('#selection').html( getSelectionCount() + ' ' + dictionary.get('selectedItems'));
+				}
+			}, 0);
+
 			nodeCtxMenu.slideDown({duration: 200});
 		});
 	};
