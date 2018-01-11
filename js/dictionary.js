@@ -133,27 +133,60 @@ var dictionary = (function(){
 
 	function updateCtxMenus(){
 		var $bgContextMenu = $('#bgContextMenu');
-		$bgContextMenu.find('#create-node span.item-text').html(get('CreateRelative'));
-		$bgContextMenu.find('#create-group span.item-text').html(get('CreateGroup'));
-		$bgContextMenu.find('#select-all').html(get('SelectAll') + '<span class="cmd-text">Ctrl+A</span>');
+		if ($bgContextMenu.length){
+			$('#bgContextMenu-create-node span.item-text').html(get('CreateRelative'));
+			$('#bgContextMenu-create-group span.item-text').html(get('CreateGroup'));
+			$('#bgContextMenu-select-all').html(get('SelectAll') + '<span class="cmd-text">Ctrl+A</span>');
+		}
+		var $bgMenu = $('#bgMenu');
+		if ($bgMenu.length){
+			$('#bgMenu-create-node span.item-text').html(get('CreateRelative'));
+			$('#bgMenu-create-group span.item-text').html(get('CreateGroup'));
+			$('#bgMenu-select-all').html(get('SelectAll') + '<span class="cmd-text">Ctrl+A</span>');
+		}
 
 		var $nodeContextMenu = $('#nodeContextMenu');
-		$nodeContextMenu.find('#details-node span.item-text').hmtl(get('ShowInfo'));
-		$nodeContextMenu.find('#edit-node span.item-text').html(get('Edit'));
-		$nodeContextMenu.find('#delete span.item-text').html(get('Delete'));
-		$nodeContextMenu.find('#center-selection span.item-text').html(get('CenterSelection'));
-		$nodeContextMenu.find('#center-all span.item-text').html(get('Extend'));
-		$nodeContextMenu.find('#link-to-partner').html(get('LinkToPartner'));
-		$nodeContextMenu.find('#remove-from-group span.item-text').html(get('RemoveFromGroup'));
-		$nodeContextMenu.find('#add-to-group span.item-text').html(get('AddToGroup'));
-		$nodeContextMenu.find('#add-to-new-group span.item-text').html(get('NewGroup'));
+		if ($nodeContextMenu.length){
+			$('#nodeContextMenu-details-node span.item-text').html(get('ShowInfo'));
+			$('#nodeContextMenu-edit-node span.item-text').html(get('Edit'));
+			$('#nodeContextMenu-delete span.item-text').html(get('Delete'));
+			$('#nodeContextMenu-center-selection span.item-text').html(get('CenterSelection'));
+			$('#nodeContextMenu-center-all span.item-text').html(get('Extend'));
+			$('#nodeContextMenu-link-to-partner').html(get('LinkToPartner'));
+			$('#nodeContextMenu-remove-from-group span.item-text').html(get('RemoveFromGroup'));
+			$('#nodeContextMenu-add-to-group span.item-text').html(get('AddToGroup'));
+			$('#nodeContextMenu-add-to-new-group span.item-text').html(get('NewGroup'));
+		}
+		var $nodeMenu = $('#nodeMenu');
+		if ($nodeMenu.length){
+			$('#nodeMenu-details-node span.item-text').html(get('ShowInfo'));
+			$('#nodeMenu-edit-node span.item-text').html(get('Edit'));
+			$('#nodeMenu-delete span.item-text').html(get('Delete'));
+			$('#nodeMenu-center-selection span.item-text').html(get('CenterSelection'));
+			$('#nodeMenu-center-all span.item-text').html(get('Extend'));
+			$('#nodeMenu-link-to-partner').html(get('LinkToPartner'));
+			$('#nodeMenu-remove-from-group span.item-text').html(get('RemoveFromGroup'));
+			$('#nodeMenu-add-to-group span.item-text').html(get('AddToGroup'));
+			$('#nodeMenu-add-to-new-group span.item-text').html(get('NewGroup'));
+		}
 
 		var $groupContextMenu = $('#groupContextMenu');
-		$groupContextMenu.find('#details-group span.item-text').hmtl(get('ShowInfo'));
-		$groupContextMenu.find('#edit-group span.item-text').html(get('Edit'));
-		$groupContextMenu.find('#delete span.item-text').html(get('Delete'));
-		$groupContextMenu.find('#center-selection span.item-text').html(get('CenterSelection'));
-		$groupContextMenu.find('#center-all span.item-text').html(get('Extend'));
+		if ($groupContextMenu.length){			
+			$('#groupContextMenu-details-group span.item-text').html(get('ShowInfo'));
+			$('#groupContextMenu-edit-group span.item-text').html(get('Edit'));
+			$('#groupContextMenu-delete span.item-text').html(get('Delete'));
+			$('#groupContextMenu-center-selection span.item-text').html(get('CenterSelection'));
+			$('#groupContextMenu-center-all span.item-text').html(get('Extend'));
+		}
+
+		var $groupMenu = $('#groupMenu');
+		if ($groupMenu.length){			
+			$('#groupMenu-details-group span.item-text').html(get('ShowInfo'));
+			$('#groupMenu-edit-group span.item-text').html(get('Edit'));
+			$('#groupMenu-delete span.item-text').html(get('Delete'));
+			$('#groupMenu-center-selection span.item-text').html(get('CenterSelection'));
+			$('#groupMenu-center-all span.item-text').html(get('Extend'));
+		}
 	};
 
 	return { 
