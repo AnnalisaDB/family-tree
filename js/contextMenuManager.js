@@ -1,5 +1,9 @@
 var contextMenuManager = function(isTouchDevice){
+	// floating
 	var bgCtxMenu, nodeCtxMenu, groupCtxMenu;
+	var ctxMenuMaxSize = {width: 370, height: 305};
+	// fixed
+	var bgMenu, nodeMenu, groupMenu;
 	
 	function _setCtxMenuPosition(ctxMenu, x, y, d3container){
 		if (!ctxMenu || !d3container || d3container.empty())
@@ -31,24 +35,24 @@ var contextMenuManager = function(isTouchDevice){
 		resetGroupMenu();
 	};
 
-	function createBackgroundMenu(){
+	function createBgCtxMenu(){
 		var menuHtml = '<ul class="dropdown-menu" role="menu">'
-					+ '   <li><a tabindex="-1" href="#" id="create-node">'
+					+ '   <li><a tabindex="-1" href="#" id="bgContextMenu-create-node">'
 					+ '      <i class="glyphicon fa fa-user-plus"></i>'
 					+ '      <span class="item-text">Create relative</span>...'
 					+ '   </a></li>'
-					+ '	  <li><a tabindex="-1" href="#" id="create-group">'
+					+ '	  <li><a tabindex="-1" href="#" id="bgContextMenu-create-group">'
 					+ '      <i class="glyphicon fa fa-users"></i>'
 					+ '      <span class="item-text">Create group</span>...'
 					+ '   </a></li>'
 					+ '   <li class="divider"></li>'
-					+ '   <li><a tabindex="-1" href="#" id="select-all">'
+					+ '   <li><a tabindex="-1" href="#" id="bgContextMenu-select-all">'
 					+ '      <span class="cmd-text">Ctrl+A</span>'
-					+ '      <span style="display: inline-block;">Select all</span>'
+					+ '      <span class="item-text">Select all</span>'
 					+ '   </a></li>'
 					+ '</ul>';
 		bgCtxMenu = $('<div>', { id: 'bgContextMenu' });
-		bgCtxMenu.addClass('dropdown clearfix');
+		bgCtxMenu.addClass('context-menu dropdown clearfix');
 		bgCtxMenu.html(menuHtml);
 		$('#main-script').before(bgCtxMenu);
 
@@ -56,18 +60,41 @@ var contextMenuManager = function(isTouchDevice){
 			$('.cmd-text:not(.caret-right),#selection-area-item').addClass('hide');
 	};
 
-	function initBackgroundMenu(applyCallbacks, onRightClickTo){
+	function createBgMenu(){
+		var menuHtml = '<ul class="nav navbar-nav">'
+					+ '   <li><a href="#" id="bgMenu-create-node">'
+					+ '      <i class="glyphicon fa fa-user-plus"></i>'
+					+ '      <span class="item-text">Create relative</span>...'
+					+ '   </a></li>'
+					+ '	  <li><a href="#" id="bgMenu-create-group">'
+					+ '      <i class="glyphicon fa fa-users"></i>'
+					+ '      <span class="item-text">Create group</span>...'
+					+ '   </a></li>'
+					+ '   <li class="divider"></li>'
+					+ '   <li><a href="#" id="bgMenu-select-all">'
+					+ '      <span class="cmd-text">Ctrl+A</span>'
+					+ '      <span class="item-text">Select all</span>'
+					+ '   </a></li>'
+					+ '</ul>';
+		bgMenu = $('<div class="navbar-collapse collapse" id="bgMenu" aria-expanded="false" style=""></div>');
+		bgMenu.html(menuHtml);
+		$('#viewport>div.fixed-menu.navbar').append(bgMenu);
+		if (isTouchDevice)
+			$('.cmd-text:not(.caret-right),#selection-area-item').addClass('hide');
+	};
+
+	function initBackgroundMenu(applyCallbacks, addEventsTo){
 		applyCallbacks = applyCallbacks || {};
-		onRightClickTo = onRightClickTo || {};
+		addEventsTo = addEventsTo || {};
 
 		bgCtxMenu = $('#bgContextMenu');
 
 		if (!bgCtxMenu || !bgCtxMenu.length)
-			createBackgroundMenu();
+			createBgCtxMenu();
 		
 		bgCtxMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function() {
 			var id = $(this).attr('id');
-			if (id == 'create-node' || id == 'create-group'){
+			if (id == 'bgContextMenu-create-node' || id == 'bgContextMenu-create-group'){
 				var left = +bgCtxMenu.css('left').replace('px',''), 
 					top = +bgCtxMenu.css('top').replace('px',''); 
 				
@@ -88,22 +115,70 @@ var contextMenuManager = function(isTouchDevice){
 						popup.modal();
 				}
 			}
-			else if (id == 'select-all' && applyCallbacks.selectAll)
+			else if (id == 'bgContextMenu-select-all' && applyCallbacks.selectAll)
 				applyCallbacks.selectAll();
 			bgCtxMenu.hide();
 		});
+
+		bgMenu = $('#bgMenu');
+		if (!bgMenu || !bgMenu.length)
+			createBgMenu();
+
+		bgMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function() {
+			var id = $(this).attr('id');
+			bgMenu.collapse('toggle');
+			bgMenu.one('hidden.bs.collapse', function(){
+				if (id == 'bgMenu-create-node' || id == 'bgMenu-create-group'){
+					var $viewport = $('#viewport'),
+						width = $viewport.width(),
+						height = $viewport.height();
+
+					var left = width * 0.5, top = height * 0.5;
+
+					var type = id.substring(14);
+
+					if (applyCallbacks.editNewObject)
+						applyCallbacks.editNewObject(type, left, top);
+
+					var popup = $('#' + type + '-popup');
+					if (popup.length !== 0) {
+						var mainCollapsableNavbar = $('#main-navbar-collapse');
+						if (isTouchDevice && mainCollapsableNavbar.is(':visible')){
+							mainCollapsableNavbar.collapse('toggle');
+							mainCollapsableNavbar.one('hidden.bs.collapse', function(){
+								popup.modal();
+							});
+						} else 
+							popup.modal();
+					}
+				}
+				else if (id == 'bgMenu-select-all' && applyCallbacks.selectAll)
+					applyCallbacks.selectAll();		
+			});				
+		});
+
 	};
 
 	function resetBackgroundMenu(){
 		if (bgCtxMenu && bgCtxMenu.html() !== undefined)
 			bgCtxMenu.off(isTouchDevice ? 'touchstart' : 'click', 'a');
+		if (bgMenu && bgMenu.html() !== undefined)
+			bgMenu.off(isTouchDevice ? 'touchstart' : 'click', 'a');
 	};
 
-	function _onBackgroundRightClick(d3selection, d3container){
+	function _addEventsToBackground(d3selection, d3container){
 		if (!d3selection || d3selection.empty() || !d3container || d3container.empty())
 			return;
 		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(){
-			d3.event.preventDefault();
+			var viewport = $('#viewport');
+			if (viewport.width() < ctxMenuMaxSize.width || viewport.height() < ctxMenuMaxSize.height){
+				hide();
+				setTimeout(function(){ 
+					bgMenu.collapse('toggle'); 
+				}, 0);
+				return;
+			}
+
 			var p = util.getPosition(d3.event);
 			var x = p[0], y = p[1];
 
@@ -117,44 +192,84 @@ var contextMenuManager = function(isTouchDevice){
 		});
 	};
 
-	function createGroupMenu(){
+	function createGroupCtxMenu(){
 		var menuHtml = '<ul class="dropdown-menu" role="menu">'
-					+ '   <li><a tabindex="-1" href="#" id="selection" class="disabled"></a></li>'
+					+ '   <li><a tabindex="-1" href="#" id="groupContextMenu-selection" class="disabled"></a></li>'
 					+ '   <li class="divider"></li>'
-					+ '   <li><a tabindex="-1" href="#" id="details-group" class="hide">'
+					+ '   <li><a tabindex="-1" href="#" id="groupContextMenu-details-group" class="hide">'
 					+ '      <span class="glyphicon glyphicon-info-sign"></span>'
 					+ '      <span class="item-text">Show info</span>'
 					+ '   </a></li>'
-					+ '   <li><a tabindex="-1" href="#" id="edit-group">'
+					+ '   <li><a tabindex="-1" href="#" id="groupContextMenu-edit-group">'
 					+ '      <span class="glyphicon glyphicon-pencil"></span>'
 					+ '      <span class="item-text">Edit</span>...'
 					+ '   </a></li>'
 					+ '   <li class="divider"></li>'
-					+ '   <li><a tabindex="-1" href="#" id="delete">'
+					+ '   <li><a tabindex="-1" href="#" id="groupContextMenu-delete">'
 					+ '      <span class="cmd-text">Del</span>'
 					+ '      <span class="glyphicon glyphicon-trash"></span>'
 					+ '      <span class="item-text">Delete</span>'
 					+ '   </a></li>'
 					+ '   <li class="divider"></li>'
-					+ '   <li><a tabindex="-1" href="#" id="center-selection">'
+					+ '   <li><a tabindex="-1" href="#" id="groupContextMenu-center-selection">'
 					+ '      <span class="cmd-text">S</span>'
 					+ '      <i class="glyphicon fa fa-bullseye"></i>'
 					+ '      <span class="item-text">Center selection</span>'
 					+ '   </a></li>'
-					+ '   <li><a tabindex="-1" href="#" id="center-all">'
+					+ '   <li><a tabindex="-1" href="#" id="groupContextMenu-center-all">'
 					+ '      <span class="cmd-text">E</span>'
 					+ '      <span class="glyphicon glyphicon-fullscreen"></span>'
 					+ '      <span class="item-text">Extend</span>'
 					+ '   </a></li>'
 					+ '</ul>';
 		groupCtxMenu = $('<div>', { id: 'groupContextMenu' });
-		groupCtxMenu.addClass('dropdown clearfix');
+		groupCtxMenu.addClass('context-menu dropdown clearfix');
 		groupCtxMenu.html(menuHtml);
 		$('#main-script').before(groupCtxMenu);
 
 		if (isTouchDevice){
 			$('.cmd-text:not(.caret-right),#selection-area-item').addClass('hide');
-			$('#details-group').removeClass('hide');
+			$('#groupContextMenu-details-group').removeClass('hide');
+		}
+	};
+
+	function createGroupMenu(){
+		var menuHtml = '<ul class="nav navbar-nav">'
+					+ '   <li><a href="#" id="groupMenu-selection" class="disabled"></a></li>'
+					+ '   <li class="divider"></li>'
+					+ '   <li><a href="#" id="groupMenu-details-group" class="hide">'
+					+ '      <span class="glyphicon glyphicon-info-sign"></span>'
+					+ '      <span class="item-text">Show info</span>'
+					+ '   </a></li>'
+					+ '   <li><a href="#" id="groupMenu-edit-group">'
+					+ '      <span class="glyphicon glyphicon-pencil"></span>'
+					+ '      <span class="item-text">Edit</span>...'
+					+ '   </a></li>'
+					+ '   <li class="divider"></li>'
+					+ '   <li><a href="#" id="groupMenu-delete">'
+					+ '      <span class="cmd-text">Del</span>'
+					+ '      <span class="glyphicon glyphicon-trash"></span>'
+					+ '      <span class="item-text">Delete</span>'
+					+ '   </a></li>'
+					+ '   <li class="divider"></li>'
+					+ '   <li><a href="#" id="groupMenu-center-selection">'
+					+ '      <span class="cmd-text">S</span>'
+					+ '      <i class="glyphicon fa fa-bullseye"></i>'
+					+ '      <span class="item-text">Center selection</span>'
+					+ '   </a></li>'
+					+ '   <li><a href="#" id="groupMenu-center-all">'
+					+ '      <span class="cmd-text">E</span>'
+					+ '      <span class="glyphicon glyphicon-fullscreen"></span>'
+					+ '      <span class="item-text">Extend</span>'
+					+ '   </a></li>'
+					+ '</ul>';
+		groupMenu = $('<div class="navbar-collapse collapse" id="groupMenu" aria-expanded="false" style=""></div>');
+		groupMenu.html(menuHtml);
+		$('#viewport>div.fixed-menu.navbar').append(groupMenu);
+
+		if (isTouchDevice){
+			$('.cmd-text:not(.caret-right),#selection-area-item').addClass('hide');
+			$('#groupMenu-details-group').removeClass('hide');
 		}
 	};
 
@@ -164,33 +279,59 @@ var contextMenuManager = function(isTouchDevice){
 		groupCtxMenu = $('#groupContextMenu');
 
 		if (!groupCtxMenu || !groupCtxMenu.length)
-			createGroupMenu();
+			createGroupCtxMenu();
 
 		groupCtxMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function(ev) {
 			var id = $(this).attr('id');
 			
-			if (id == 'delete' && applyCallbacks.delete){
+			if (id == 'groupContextMenu-delete' && applyCallbacks.delete){
 				applyCallbacks.delete();
-			} else if (id == 'edit-group'){
+			} else if (id == 'groupContextMenu-edit-group'){
 				var popup = $('#group-popup');
 				popup.modal();
-			} else if (id == 'center-selection' && applyCallbacks.centerSelection)
+			} else if (id == 'groupContextMenu-center-selection' && applyCallbacks.centerSelection)
 				applyCallbacks.centerSelection();
-			else if (id == 'center-all' && applyCallbacks.centerAll)
+			else if (id == 'groupContextMenu-center-all' && applyCallbacks.centerAll)
 				applyCallbacks.centerAll();
-			else if (id == 'details-group' && applyCallbacks.showInfo)
+			else if (id == 'groupContextMenu-details-group' && applyCallbacks.showInfo)
 				applyCallbacks.showInfo(groupCtxMenu.groupId)
 			
 			groupCtxMenu.hide();
 		});
+
+		groupMenu = $('#groupMenu');
+
+		if (!groupMenu || !groupMenu.length)
+			createGroupMenu();
+
+		groupMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function(ev) {
+			var id = $(this).attr('id');
+			
+			if (id == 'groupMenu-delete' && applyCallbacks.delete){
+				applyCallbacks.delete();
+			} else if (id == 'groupMenu-edit-group'){
+				var popup = $('#group-popup');
+				popup.modal();
+			} else if (id == 'groupMenu-center-selection' && applyCallbacks.centerSelection)
+				applyCallbacks.centerSelection();
+			else if (id == 'groupMenu-center-all' && applyCallbacks.centerAll)
+				applyCallbacks.centerAll();
+			else if (id == 'groupMenu-details-group' && applyCallbacks.showInfo)
+				applyCallbacks.showInfo(groupMenu.groupId)
+			
+			groupCtxMenu.hide();
+		});
+
 	};
 
 	function resetGroupMenu(){
 		if (groupCtxMenu && groupCtxMenu.html() !== undefined)
 			groupCtxMenu.off(isTouchDevice ? 'touchstart' : 'click', 'a');
+		if (groupMenu && groupMenu.html() !== undefined)
+			groupMenu.off(isTouchDevice ? 'touchstart' : 'click', 'a');
 	};
 
-	function _onGroupRightClick(d3selection, d3container, cfg){
+	function _addEventsToGroup(d3selection, d3container, cfg){
 		if (!d3selection || d3selection.empty())
 			return;
 
@@ -198,11 +339,6 @@ var contextMenuManager = function(isTouchDevice){
 		var getSelectionCount = cfg.getSelectionCount;
 
 		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(group){
-			nodeCtxMenu.groupId = group.id;
-			d3.event.preventDefault();
-			var p = util.getPosition(d3.event);
-			var x = p[0], y = p[1];
-			
 			var popup = $('#group-popup');		
 			['text', 'width', 'height', 'textSize', 'color', 'nodes', 'id'].forEach(function(name){
 				var value = group[name];
@@ -217,6 +353,26 @@ var contextMenuManager = function(isTouchDevice){
 						field.trigger('change');
 				}
 			});
+			
+			var viewport = $('#viewport');
+			if (viewport.width() < ctxMenuMaxSize.width || viewport.height() < ctxMenuMaxSize.height){
+				hide();
+				groupMenu.groupId = groupId.id;
+				setTimeout(function(){ 
+					if (getSelectionCount){
+						var count = getSelectionCount();
+						groupMenu.find('#groupMenu-selection').html( getSelectionCount() + ' ' + dictionary.get('selectedItems'));
+					}
+					groupMenu.collapse('toggle'); 
+				}, 0);
+				return;
+			}
+
+			groupCtxMenu.groupId = group.id;
+			var p = util.getPosition(d3.event);
+			var x = p[0], y = p[1];
+			
+			
 			groupCtxMenu.css({
 				left: x,
 				top: y
@@ -227,7 +383,7 @@ var contextMenuManager = function(isTouchDevice){
 			setTimeout(function(){
 				if (getSelectionCount){
 					var count = getSelectionCount();
-					groupCtxMenu.find('#selection').html( getSelectionCount() + ' ' + dictionary.get('selectedItems'));
+					groupCtxMenu.find('#groupContextMenu-selection').html( getSelectionCount() + ' ' + dictionary.get('selectedItems'));
 				}
 			}, 0);	
 			
@@ -235,47 +391,47 @@ var contextMenuManager = function(isTouchDevice){
 		});
 	};
 
-	function createNodeMenu(){
+	function createNodeCtxMenu(){
 		var menuHtml = '<ul class="dropdown-menu" role="menu">'
-					+ '   <li><a tabindex="-1" href="#" id="selection" class="disabled"></a></li>'
+					+ '   <li><a tabindex="-1" href="#" id="nodeContextMenu-selection" class="disabled"></a></li>'
 					+ '   <li class="divider"></li>'
-					+ '   <li><a tabindex="-1" href="#" id="details-node" class="hide">'
+					+ '   <li><a tabindex="-1" href="#" id="nodeContextMenu-details-node" class="hide">'
 					+ '      <span class="glyphicon glyphicon-info-sign"></span>'
 					+ '      <span class="item-text">Show info</span>'
 					+ '   </a></li>'
-					+ '   <li><a tabindex="-1" href="#" id="edit-node">'
+					+ '   <li><a tabindex="-1" href="#" id="nodeContextMenu-edit-node">'
 					+ '      <span class="glyphicon glyphicon-pencil"></span>'
 					+ '      <span class="item-text">Edit</span>...'
 					+ '   </a></li>'
 					+ '   <li class="divider"></li>'
-					+ '   <li><a tabindex="-1" href="#" id="delete">'
+					+ '   <li><a tabindex="-1" href="#" id="nodeContextMenu-delete">'
 					+ '      <span class="cmd-text">Del</span>'
 					+ '      <span class="glyphicon glyphicon-trash"></span>'
 					+ '      <span class="item-text">Delete</span>'
 					+ '   </a></li>'
 					+ '   <li class="divider"></li>'
-					+ '   <li><a tabindex="-1" href="#" id="center-selection">'
+					+ '   <li><a tabindex="-1" href="#" id="nodeContextMenu-center-selection">'
 					+ '      <span class="cmd-text">S</span>'
 					+ '      <i class="glyphicon fa fa-bullseye"></i>'
 					+ '      <span class="item-text">Center selection</span>'
 					+ '   </a></li>'
-					+ '   <li><a tabindex="-1" href="#" id="center-all">'
+					+ '   <li><a tabindex="-1" href="#" id="nodeContextMenu-center-all">'
 					+ '      <span class="cmd-text">E</span>'
 					+ '      <span class="glyphicon glyphicon-fullscreen"></span>'
 					+ '      <span class="item-text">Extend</span>'
 					+ '   </a></li>'
 					+ '   <li class="divider"></li>'
-					+ '   <li><a tabindex="-1" href="#" id="link-to-partner">Link to partner</a></li>'
+					+ '   <li><a tabindex="-1" href="#" id="nodeContextMenu-link-to-partner">Link to partner</a></li>'
 					+ '   <li class="dropdown-submenu">'
 					+ '      <a tabindex="-1" href="#" id="add-to-group">'
 					+ '         <span class="cmd-text caret-right"></span>'
 					+ '         <span class="item-text">Add to group</span>'
 					+ '      </a>'
 					+ '      <ul class="dropdown-menu"><li>'
-					+ '         <a href="#" id="add-to-new-group"><span class="item-text">New group</span>...</a>'
+					+ '         <a href="#" id="nodeContextMenu-add-to-new-group"><span class="item-text">New group</span>...</a>'
 					+ '      </li></ul>'
 					+ '   <li class="dropdown-submenu">'
-					+ '      <a tabindex="-1" href="#" id="remove-from-group">'
+					+ '      <a tabindex="-1" href="#" id="nodeContextMenu-remove-from-group">'
 					+ '         <span class="cmd-text caret-right"></span>'
 					+ '         <span class="item-text">Remove from group</span>'
 					+ '      </a>'
@@ -284,13 +440,69 @@ var contextMenuManager = function(isTouchDevice){
 					+ '</ul>';
 
 		nodeCtxMenu = $('<div>', { id: 'nodeContextMenu' });
-		nodeCtxMenu.addClass('dropdown clearfix');
+		nodeCtxMenu.addClass('context-menu dropdown clearfix');
 		nodeCtxMenu.html(menuHtml);
 		$('#main-script').before(nodeCtxMenu);
 
 		if (isTouchDevice){
 			$('.cmd-text:not(.caret-right),#selection-area-item').addClass('hide');
-			$('#details-node').removeClass('hide');
+			$('#nodeContextMenu-details-node').removeClass('hide');
+		}
+	};
+
+	function createNodeMenu(){
+		var menuHtml = '<ul class="nav navbar-nav">'
+					+ '   <li><a href="#" id="nodeMenu-selection" class="disabled"></a></li>'
+					+ '   <li class="divider"></li>'
+					+ '   <li><a href="#" id="nodeMenu-details-node" class="hide">'
+					+ '      <span class="glyphicon glyphicon-info-sign"></span>'
+					+ '      <span class="item-text">Show info</span>'
+					+ '   </a></li>'
+					+ '   <li><a href="#" id="nodeMenu-edit-node">'
+					+ '      <span class="glyphicon glyphicon-pencil"></span>'
+					+ '      <span class="item-text">Edit</span>...'
+					+ '   </a></li>'
+					+ '   <li class="divider"></li>'
+					+ '   <li><a href="#" id="nodeMenu-delete">'
+					+ '      <span class="cmd-text">Del</span>'
+					+ '      <span class="glyphicon glyphicon-trash"></span>'
+					+ '      <span class="item-text">Delete</span>'
+					+ '   </a></li>'
+					+ '   <li class="divider"></li>'
+					+ '   <li><a href="#" id="nodeMenu-center-selection">'
+					+ '      <span class="cmd-text">S</span>'
+					+ '      <i class="glyphicon fa fa-bullseye"></i>'
+					+ '      <span class="item-text">Center selection</span>'
+					+ '   </a></li>'
+					+ '   <li><a href="#" id="nodeMenu-center-all">'
+					+ '      <span class="cmd-text">E</span>'
+					+ '      <span class="glyphicon glyphicon-fullscreen"></span>'
+					+ '      <span class="item-text">Extend</span>'
+					+ '   </a></li>'
+					+ '   <li class="divider"></li>'
+					+ '   <li><a href="#" id="nodeMenu-link-to-partner">Link to partner</a></li>'
+					+ '   <li class="dropdown-submenu">'
+					+ '      <a href="#" id="add-to-group">'
+					+ '         <span class="cmd-text caret-right"></span>'
+					+ '         <span class="item-text">Add to group</span>'
+					+ '      </a>'
+					+ '      <ul class="dropdown-menu"><li>'
+					+ '         <a href="#" id="nodeMenu-add-to-new-group"><span class="item-text">New group</span>...</a>'
+					+ '      </li></ul>'
+					+ '   <li class="dropdown-submenu">'
+					+ '      <a href="#" id="nodeContextMenu-remove-from-group">'
+					+ '         <span class="cmd-text caret-right"></span>'
+					+ '         <span class="item-text">Remove from group</span>'
+					+ '      </a>'
+					+ '      <ul class="dropdown-menu"></ul>'
+					+ '   </li>'
+					+ '</ul>';
+		nodeMenu = $('<div class="navbar-collapse collapse" id="nodeMenu" aria-expanded="false" style=""></div>');
+		nodeMenu.html(menuHtml);
+		$('#viewport>div.fixed-menu.navbar').append(nodeMenu);
+		if (isTouchDevice){
+			$('.cmd-text:not(.caret-right),#selection-area-item').addClass('hide');
+			$('#nodeMenu-details-node').removeClass('hide');
 		}
 	};
 
@@ -300,10 +512,10 @@ var contextMenuManager = function(isTouchDevice){
 		nodeCtxMenu = $('#nodeContextMenu');
 
 		if (!nodeCtxMenu || !nodeCtxMenu.length)
-			createNodeMenu();
+			createNodeCtxMenu();
 
 		nodeCtxMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function() {
-			nodeCtxMenu.find('#add-to-group, #remove-from-group').each(function(){
+			nodeCtxMenu.find('#nodeContextMenu-add-to-group, #nodeContextMenu-remove-from-group').each(function(){
 				var groupsList = $(this).next('ul');
 				if (groupsList.is(':visible'))
 					groupsList
@@ -312,31 +524,31 @@ var contextMenuManager = function(isTouchDevice){
 						.hide();
 			});
 			var id = $(this).attr('id');
-			if (id == 'delete' && applyCallbacks.delete)
+			if (id == 'nodeContextMenu-delete' && applyCallbacks.delete)
 				applyCallbacks.delete();
-			else if (id == 'details-node' && applyCallbacks.showInfo)
+			else if (id == 'nodeContextMenu-details-node' && applyCallbacks.showInfo)
 				applyCallbacks.showInfo(nodeCtxMenu.nodeId);
-			else if (id == 'edit-node' && applyCallbacks.editNode)
+			else if (id == 'nodeContextMenu-edit-node' && applyCallbacks.editNode)
 				applyCallbacks.editNode()
-			else if (id == 'center-selection' && applyCallbacks.centerSelection)
+			else if (id == 'nodeContextMenu-center-selection' && applyCallbacks.centerSelection)
 				applyCallbacks.centerSelection(); 
-			else if (id == 'center-all' && applyCallbacks.centerAll)
+			else if (id == 'nodeContextMenu-center-all' && applyCallbacks.centerAll)
 				applyCallbacks.centerAll();
-			else if (id == 'link-to-partner' && applyCallbacks.linkToPartner)
+			else if (id == 'nodeContextMenu-link-to-partner' && applyCallbacks.linkToPartner)
 				applyCallbacks.linkToPartner();
-			else if (id == 'add-to-group' || id == 'remove-from-group'){
+			else if (id == 'nodeContextMenu-add-to-group' || id == 'nodeContextMenu-remove-from-group'){
 				if (isTouchDevice)
 					return;
 				event.stopPropagation();
 				event.preventDefault();
-			} else if ((id == 'add-to-new-group' || id.indexOf('add-to-existing-group-') != -1) || 
-					(id == 'remove-from-group' || id.indexOf('remove-from-existing-group-') != -1)){
+			} else if ((id == 'nodeContextMenu-add-to-new-group' || id.indexOf('nodeContextMenu-add-to-existing-group-') != -1) || 
+					(id == 'nodeContextMenu-remove-from-group' || id.indexOf('nodeContextMenu-remove-from-existing-group-') != -1)){
 				var el = this;
 				while (el && el.className.indexOf('dropdown-menu') == -1)
 					el = el.parentNode;
 				if (el)
 					$(el).hide();
-				if (id == 'add-to-new-group'){
+				if (id == 'nodeContextMenu-add-to-new-group'){
 					var left = +nodeCtxMenu.css('left').replace('px',''), 
 					top = +nodeCtxMenu.css('top').replace('px',''); 
 					if (applyCallbacks.getTmpGroup)
@@ -347,7 +559,7 @@ var contextMenuManager = function(isTouchDevice){
 			nodeCtxMenu.hide();
 		});
 
-		var groupsListItems = nodeCtxMenu.find('#add-to-group, #remove-from-group');
+		var groupsListItems = nodeCtxMenu.find('#nodeContextMenu-add-to-group, #nodeContextMenu-remove-from-group');
 
 		if (isTouchDevice){
 			groupsListItems.on('touchstart', function() {
@@ -371,6 +583,52 @@ var contextMenuManager = function(isTouchDevice){
 					ul.hide();
 			});
 		}
+
+		nodeMenu = $('#nodeMenu');
+		if (!nodeMenu || !nodeMenu.length)
+			createNodeMenu();
+
+		nodeMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function() {
+			var id = $(this).attr('id');
+			nodeMenu.collapse('toggle');
+			nodeMenu.one('hidden.bs.collapse', function(){
+				if (id == 'nodeMenu-delete' && applyCallbacks.delete)
+					applyCallbacks.delete();
+				else if (id == 'nodeMenu-details-node' && applyCallbacks.showInfo)
+					applyCallbacks.showInfo(nodeMenu.nodeId);
+				else if (id == 'nodeMenu-edit-node' && applyCallbacks.editNode)
+					applyCallbacks.editNode()
+				else if (id == 'nodeMenu-center-selection' && applyCallbacks.centerSelection)
+					applyCallbacks.centerSelection(); 
+				else if (id == 'nodeMenu-center-all' && applyCallbacks.centerAll)
+					applyCallbacks.centerAll();
+				else if (id == 'nodeMenu-link-to-partner' && applyCallbacks.linkToPartner)
+					applyCallbacks.linkToPartner();
+				else {
+					console.log('id', id)
+				}
+				/*else if (id == 'nodeMenu-add-to-group' || id == 'nodeMenu-remove-from-group'){
+					if (isTouchDevice)
+						return;
+					event.stopPropagation();
+					event.preventDefault();
+				} else if ((id == 'nodeMenu-add-to-new-group' || id.indexOf('nodeMenu-add-to-existing-group-') != -1) || 
+						(id == 'nodeMenu-remove-from-group' || id.indexOf('nodeMenu-remove-from-existing-group-') != -1)){
+					var el = this;
+					while (el && el.className.indexOf('dropdown-menu') == -1)
+						el = el.parentNode;
+					if (el)
+						$(el).hide();
+					if (id == 'nodeContextMenu-add-to-new-group'){
+						var left = +nodeCtxMenu.css('left').replace('px',''), 
+						top = +nodeCtxMenu.css('top').replace('px',''); 
+						if (applyCallbacks.getTmpGroup)
+							tmpGroup = applyCallbacks.getTmpGroup(left, top)
+						$('#group-popup').modal();
+					}
+				}*/
+			});
+		});
 	};
 
 	function _updateGroupsListPosition(listMenu){
@@ -402,7 +660,7 @@ var contextMenuManager = function(isTouchDevice){
 			$(this).remove();
 		});
 		
-		var lastEl = menu.find('#add-to-new-group').parent('li');
+		var lastEl = menu.find('#nodeContextMenu-add-to-new-group').parent('li');
 
 		if (groupsList && groupsList.length){
 			groupsList.sort(function(a, b) {
@@ -416,7 +674,7 @@ var contextMenuManager = function(isTouchDevice){
 
 			groupsList.forEach(function(g){
 				var text = g.text.split(/\r\n|\r|\n/),
-					li = '<li class="existing-group"><a tabindex="-1" href="#" id="add-to-existing-group-' + g.id + '">';
+					li = '<li class="existing-group"><a tabindex="-1" href="#" id="nodeContextMenu-add-to-existing-group-' + g.id + '">';
 				li += text[0];
 				if (text.length > 1) 
 					li += '...</a></li>';
@@ -441,7 +699,7 @@ var contextMenuManager = function(isTouchDevice){
 
 	function updateRemoveFromGroupsItem(groupsList, callback){
 		callback = callback || function(){};
-		var $li = $('#remove-from-group').parent('li'),
+		var $li = $('#nodeContextMenu-remove-from-group').parent('li'),
 			menu = $li.find('.dropdown-menu');
 
 		menu.off(isTouchDevice ? 'touchstart' : 'click', '.existing-group a');
@@ -463,7 +721,7 @@ var contextMenuManager = function(isTouchDevice){
 
 			groupsList.forEach(function(g){
 				var text = g.text.split(/\r\n|\r|\n/),
-					li = '<li class="existing-group"><a tabindex="-1" href="#" id="remove-from-existing-group-' + g.id + '">';
+					li = '<li class="existing-group"><a tabindex="-1" href="#" id="nodeContextMenu-remove-from-existing-group-' + g.id + '">';
 				li += text[0];
 				if (text.length > 1) 
 					li += '...</a></li>';
@@ -483,10 +741,10 @@ var contextMenuManager = function(isTouchDevice){
 				callback(id);
 			});
 
-			$li.find('#remove-from-group').removeClass('disabled');
+			$li.find('#nodeContextMenu-remove-from-group').removeClass('disabled');
 			return;
 		}
-		$li.find('#remove-from-group').addClass('disabled');
+		$li.find('#nodeContextMenu-remove-from-group').addClass('disabled');
 	};
 
 	function resetNodeMenu(){
@@ -497,24 +755,27 @@ var contextMenuManager = function(isTouchDevice){
 				nodeCtxMenu.viewport = null;
 			}
 		}
+		if (nodeMenu && nodeMenu.html() !== undefined){
+			nodeMenu.off(isTouchDevice ? 'touchstart' : 'click', 'a');
+			if (nodeMenu.viewport){
+				$(nodeMenu.viewport).off(isTouchDevice ? 'touchstart' : 'contextmenu');
+				nodeMenu.viewport = null;
+			}
+		}
 	};
 
-	function _onNodeRightClick(d3selection, d3container, cfg){
+	function _addEventsToNode(d3selection, d3container, cfg){
 		if (!d3selection || d3selection.empty())
 			return;
 
 		nodeCtxMenu.viewport = d3container.node();
+		nodeMenu.viewport = d3container.node();
 
 		cfg = cfg || {};
 		var getSelectionCount = cfg.getSelectionCount;
 		var updateItems = cfg.updateItems;
 
 		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(node){
-			nodeCtxMenu.nodeId = node.id;
-			d3.event.preventDefault();
-			var p = util.getPosition(d3.event);
-			var x = p[0], y = p[1];
-
 			var popup = $('#node-popup');		
 			['id', 'name', 'surname', 'description', 'sex'].forEach(function(name){
 				var value = node[name];
@@ -528,6 +789,24 @@ var contextMenuManager = function(isTouchDevice){
 			if (updateItems)
 				updateItems();
 
+			var viewport = $('#viewport');
+			if (viewport.width() < ctxMenuMaxSize.width || viewport.height() < ctxMenuMaxSize.height){
+				hide();
+				nodeMenu.nodeId = node.id;
+				setTimeout(function(){ 
+					if (getSelectionCount){
+						var count = getSelectionCount();
+						nodeMenu.find('#nodeMenu-selection').html( getSelectionCount() + ' ' + dictionary.get('selectedItems'));
+					}
+					nodeMenu.collapse('toggle'); 
+				}, 0);
+				return;
+			}
+
+			nodeCtxMenu.nodeId = node.id;
+			var p = util.getPosition(d3.event);
+			var x = p[0], y = p[1];
+
 			nodeCtxMenu.css({
 				left: x,
 				top: y
@@ -538,7 +817,7 @@ var contextMenuManager = function(isTouchDevice){
 			setTimeout(function(){
 				if (getSelectionCount){
 					var count = getSelectionCount();
-					nodeCtxMenu.find('#selection').html( getSelectionCount() + ' ' + dictionary.get('selectedItems'));
+					nodeCtxMenu.find('#nodeContextMenu-selection').html( getSelectionCount() + ' ' + dictionary.get('selectedItems'));
 				}
 			}, 0);
 
@@ -566,14 +845,14 @@ var contextMenuManager = function(isTouchDevice){
 		disable(nodeCtxMenu.find('#link-to-partner'));
 	};
 
-	function onRightClick(type, object, container, cfg){
+	function addEvents(type, object, container, cfg){
 		hide();
 		if (type == 'group')
-			_onGroupRightClick(object, container, cfg);
+			_addEventsToGroup(object, container, cfg);
 		else if (type == 'node'){
-			_onNodeRightClick(object, container, cfg);
+			_addEventsToNode(object, container, cfg);
 		} else {
-			_onBackgroundRightClick(object, container);
+			_addEventsToBackground(object, container);
 		}
 	}
 
@@ -588,15 +867,25 @@ var contextMenuManager = function(isTouchDevice){
 	}
 
 	function hide(){
-		if (bgCtxMenu)
+		if (bgCtxMenu && bgCtxMenu.length)
 			bgCtxMenu.hide();
-		if (nodeCtxMenu){
+		if (bgMenu && bgMenu.length && bgMenu.is(':visible'))
+			bgMenu.collapse('toggle');
+		if (nodeCtxMenu && nodeCtxMenu.length){
 			nodeCtxMenu.hide();
 			nodeCtxMenu.nodeId = null;
 		}
-		if (groupCtxMenu){
+		if (nodeMenu && nodeMenu.length && nodeMenu.is(':visible')){
+			nodeMenu.collapse('toggle');
+			nodeMenu.nodeId = null;
+		}
+		if (groupCtxMenu && groupCtxMenu.length){
 			groupCtxMenu.hide();
 			groupCtxMenu.groupId = null;
+		}
+		if (groupMenu && groupMenu.length && groupMenu.is(':visible')){
+			groupMenu.collapse('toggle');
+			groupMenu.groupId = null;
 		}
 	}
 
@@ -604,7 +893,7 @@ var contextMenuManager = function(isTouchDevice){
 		initBackgroundMenu: initBackgroundMenu,
 		initGroupMenu: initGroupMenu,
 		initNodeMenu: initNodeMenu,
-		onRightClick: onRightClick,
+		addEvents: addEvents,
 		updateAddToGroupsItem: updateAddToGroupsItem,
 		updateRemoveFromGroupsItem: updateRemoveFromGroupsItem,
 		hide: hide,
