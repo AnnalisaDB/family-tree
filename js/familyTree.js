@@ -886,15 +886,6 @@ var familyTree = function (isTouchDevice){
     			CtxMenuManager.hide();
 
 			doSelectGroup(g);
-			// select it if not
-			if (g.selected) { // multiple selection
-				if (util.selectionMode.isMulti())
-					deselectGroup(g);
-			} else {
-				if (!util.selectionMode.isMulti()) // single selection
-					deselectAll();
-				selectGroup(g);
-			}
 		};
 		// mouse events
 		function onMouseOverGroup(g){
@@ -920,14 +911,7 @@ var familyTree = function (isTouchDevice){
 		function onMouseDownGroup(g){
 			CtxMenuManager.hide();
 			// select it if not
-			if (g.selected) { // multiple selection
-				if (util.selectionMode.isMulti())
-					deselectGroup(g);
-			} else {
-				if (!util.selectionMode.isMulti()) // single selection
-					deselectAll();
-				selectGroup(g);
-			}
+			doSelectGroup(g);
 		};
 
 		function onDragStartGroup(group) {
@@ -1168,7 +1152,7 @@ var familyTree = function (isTouchDevice){
 			y1 = ys(canvasInfo.yRange[1] + groupPadding);
 		}
 		
-		d3selection.select('.group-area').classed('hidden', !g.nodes || !g.nodes.length)
+		d3selection.select('.group-area').classed('hide', !g.nodes || !g.nodes.length)
 			.attr('points', x0 + ',' + y0 + ' ' + x1 + ',' + y0 + ' ' + x1 + ',' + y1 + ' ' + x0 + ',' + y1 + ' ' + x0 + ',' + y0)
 			.style('stroke', color);
 
@@ -1205,7 +1189,7 @@ var familyTree = function (isTouchDevice){
 			});
 		});
 
-		d3selection.select('line.pointer').classed('hidden', !g.nodes || !g.nodes.length);
+		d3selection.select('line.pointer').classed('hide', !g.nodes || !g.nodes.length);
 
 		if (pointerVertex){				
 			d3selection.select('line.pointer')
@@ -1695,6 +1679,7 @@ var familyTree = function (isTouchDevice){
 	function deselectRelLink(link){
 		if (!link)
 			return;
+
 		link.selected = false;		
 		d3.select('.link#link-' + link.id).classed('selected', false);
 		
@@ -2963,7 +2948,7 @@ var familyTree = function (isTouchDevice){
 				}).on('touchmove', function () {
 					isLikeClickEvent = false;
 				}).on('touchend', function () {
-					if (isLikeClickEvent)
+					if (isLikeClickEvent && !util.selectionMode.isMulti())
 						deselectAll();
 					isLikeClickEvent = false;
 				});
