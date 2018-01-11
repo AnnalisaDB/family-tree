@@ -287,9 +287,8 @@ var util = (function(){
 				var sitdNavbar = $('#selection-in-touch-device'),
 					mftNavbar = $('#main-family-tree-navbar'),
 					mftBtnMenu = $('button[data-target="#main-navbar-collapse"]');
-				mftNavbar.removeClass('hide'); 
 				sitdNavbar.addClass('hide');
-				console.log('button expanded', mftBtnMenu.attr('aria-expanded'));
+				setTimeout(function(){mftNavbar.removeClass('hide'); }, 0);
 			}
 			isMultiSelection = false;
 		},
