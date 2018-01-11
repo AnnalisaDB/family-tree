@@ -170,6 +170,8 @@ var contextMenuManager = function(isTouchDevice){
 		if (!d3selection || d3selection.empty() || !d3container || d3container.empty())
 			return;
 		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(){
+			event.preventDefault();
+			
 			var viewport = $('#viewport');
 			if (viewport.width() < ctxMenuMaxSize.width || viewport.height() < ctxMenuMaxSize.height){
 				hide();
@@ -178,8 +180,6 @@ var contextMenuManager = function(isTouchDevice){
 				}, 0);
 				return;
 			}
-			
-			d3.event.preventDefault();
 			
 			var p = util.getPosition(d3.event);
 			var x = p[0], y = p[1];
@@ -341,6 +341,8 @@ var contextMenuManager = function(isTouchDevice){
 		var getSelectionCount = cfg.getSelectionCount;
 
 		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(group){
+			event.preventDefault();
+			
 			var popup = $('#group-popup');		
 			['text', 'width', 'height', 'textSize', 'color', 'nodes', 'id'].forEach(function(name){
 				var value = group[name];
@@ -369,13 +371,10 @@ var contextMenuManager = function(isTouchDevice){
 				}, 0);
 				return;
 			}
-
-			d3.event.preventDefault();
-
+			
 			groupCtxMenu.groupId = group.id;
 			var p = util.getPosition(d3.event);
-			var x = p[0], y = p[1];
-			
+			var x = p[0], y = p[1];			
 			
 			groupCtxMenu.css({
 				left: x,
@@ -780,6 +779,8 @@ var contextMenuManager = function(isTouchDevice){
 		var updateItems = cfg.updateItems;
 
 		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(node){
+			event.preventDefault();
+			
 			var popup = $('#node-popup');		
 			['id', 'name', 'surname', 'description', 'sex'].forEach(function(name){
 				var value = node[name];
@@ -806,8 +807,6 @@ var contextMenuManager = function(isTouchDevice){
 				}, 0);
 				return;
 			}
-
-			d3.event.preventDefault();
 			
 			nodeCtxMenu.nodeId = node.id;
 			var p = util.getPosition(d3.event);
