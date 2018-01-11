@@ -21,6 +21,8 @@ function onResize(){
 	h -= top;
 	w -= left;
 
+	$('.fixed-menu').css('max-height', h + 'px');
+
 	FamilyTree.resize(w, h);
 };
 
