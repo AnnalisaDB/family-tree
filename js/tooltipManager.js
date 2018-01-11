@@ -6,7 +6,7 @@ var tooltipManager = function(isTouchDevice){
 	function _isHidden() {
         if (!tooltip || tooltip.empty()) return true;
         var opacity = tooltip.style('opacity');
-        return (opacity.length) ? (parseFloat(opacity) == 0) : tooltip.classed('hidden');
+        return (opacity.length) ? (parseFloat(opacity) == 0) : tooltip.classed('hide');
     };
 
     function createTooltip(d3selection, targetSvg){
