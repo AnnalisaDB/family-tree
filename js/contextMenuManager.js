@@ -178,7 +178,9 @@ var contextMenuManager = function(isTouchDevice){
 				}, 0);
 				return;
 			}
-
+			
+			d3.event.preventDefault();
+			
 			var p = util.getPosition(d3.event);
 			var x = p[0], y = p[1];
 
@@ -367,6 +369,8 @@ var contextMenuManager = function(isTouchDevice){
 				}, 0);
 				return;
 			}
+
+			d3.event.preventDefault();
 
 			groupCtxMenu.groupId = group.id;
 			var p = util.getPosition(d3.event);
@@ -803,6 +807,8 @@ var contextMenuManager = function(isTouchDevice){
 				return;
 			}
 
+			d3.event.preventDefault();
+			
 			nodeCtxMenu.nodeId = node.id;
 			var p = util.getPosition(d3.event);
 			var x = p[0], y = p[1];
