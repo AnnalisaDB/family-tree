@@ -6,8 +6,8 @@ var isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || 
 var FamilyTree = familyTree(isTouchDevice);
 
 if (isTouchDevice){
-	$('.cmd-text:not(.caret-right),#selection-area-item').addClass('hidden');
-	$('#details-node,#details-group').removeClass('hidden');
+	$('.cmd-text:not(.caret-right),#selection-area-item').addClass('hide');
+	$('#details-node,#details-group').removeClass('hide');
 }
 
 var viewport = document.getElementById('viewport');
