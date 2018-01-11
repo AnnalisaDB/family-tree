@@ -148,7 +148,18 @@ textarea {
 input.form-control {
   background-color: #ededed;
 }
-#bgContextMenu, #nodeContextMenu, #groupContextMenu {
+.fixed-menu{
+  min-height: 0px;
+  border-width: 0px;
+  padding-right: 0px;
+  padding-left: 0px;
+  overflow-y: auto;
+}
+.fixed-menu .navbar-nav a {
+    margin-right: 15px !important;
+    margin-left: 45px !important;
+}
+.context-menu {
   position: absolute;
   display: none;
 }
@@ -157,77 +168,66 @@ input.form-control {
   z-index: 10000;
 }
 .navbar-inverse .dropdown-menu,
-#bgContextMenu .dropdown-menu,
-#nodeContextMenu .dropdown-menu,
-#groupContextMenu .dropdown-menu {
+.context-menu .dropdown-menu {
   font-size: 12px;
   min-width: 185px;
   background-color: #333333;
 }
-#bgContextMenu .dropdown-menu:first-child,
-#nodeContextMenu .dropdown-menu:first-child,
-#groupContextMenu .dropdown-menu:first-child {
+.context-menu .dropdown-menu:first-child{
   display:block;
   position:static;
   margin-bottom:5px;
 }
 .navbar-inverse .dropdown-menu li .cmd-text,
-#bgContextMenu .dropdown-menu li .cmd-text,
-#nodeContextMenu .dropdown-menu li .cmd-text,
-#groupContextMenu .dropdown-menu li .cmd-text {
+.context-menu .dropdown-menu li .cmd-text,
+.fixed-menu li .cmd-text {
   float: right;
 }
 
 .navbar-inverse .dropdown-menu li .item-text,
-#bgContextMenu .dropdown-menu li .item-text,
-#nodeContextMenu .dropdown-menu li .item-text,
-#groupContextMenu .dropdown-menu li .item-text {
+.context-menu .dropdown-menu li .item-text
+.fixed-menu li .item-text {
   display: inline-block;
 }
 
 .navbar-inverse .dropdown-menu li a,
-#bgContextMenu .dropdown-menu li a,
-#nodeContextMenu .dropdown-menu li a,
-#groupContextMenu .dropdown-menu li a {
+.context-menu .dropdown-menu li a,
+.fixed-menu .dropdown-menu li a {
   color: #9d9d9d;
   padding-left: 45px;
 }
 
 .navbar-inverse .dropdown-menu li a:hover,
-#bgContextMenu .dropdown-menu li a:hover,
-#nodeContextMenu .dropdown-menu li a:hover,
-#groupContextMenu .dropdown-menu li a:hover {
+.context-menu .dropdown-menu li a:hover,
+.fixed-menu li a:hover {
   color: #fff;
   background-color: #080808;
 }
 
 .navbar-inverse .dropdown-menu li a .glyphicon,
-#bgContextMenu .dropdown-menu li a .glyphicon,
-#nodeContextMenu .dropdown-menu li a .glyphicon,
-#groupContextMenu .dropdown-menu li a .glyphicon{
+.context-menu .dropdown-menu li a .glyphicon,
+.fixed-menu li a .glyphicon {
   display: inline-block;
   margin-left: -25px;
   margin-right: 10px;
 }
 
 .navbar-inverse .dropdown-menu li a.disabled,
-#bgContextMenu .dropdown-menu li a.disabled,
-#nodeContextMenu .dropdown-menu li a.disabled,
-#groupContextMenu .dropdown-menu li a.disabled {
-  pointer-events: none;
+.context-menu .dropdown-menu li a.disabled,
+.fixed-menu li a.disabled {
+  pointer-events: none !important;
   color: #6c6c6c !important;
 }
 
 .navbar-inverse #search-field input.form-control {
 	color: #fff;
-    background-color: #434343;
-    border-color: #080808;
+  background-color: #434343;
+  border-color: #080808;
 }
 
 .navbar-inverse .divider,
-#bgContextMenu .divider,
-#nodeContextMenu .divider,
-#groupContextMenu .divider {
+.context-menu .divider,
+.fixed-menu .divider {
   background-color: #6c6c6c;
 }
 .navbar {
@@ -344,6 +344,10 @@ nav#selection-in-touch-device .navbar-right{
   .navbar {
     border-radius: 0px;
   }
+
+  .fixed-menu .navbar-nav{
+    display: none !important;
+  }
 }
 
 @media (max-width: 768px) {
@@ -360,17 +364,13 @@ nav#selection-in-touch-device .navbar-right{
   }
 
   .navbar-inverse .dropdown-menu li a,
-  #bgContextMenu .dropdown-menu li a,
-  #nodeContextMenu .dropdown-menu li a,
-  #groupContextMenu .dropdown-menu li a {
+  .context-menu .dropdown-menu li a {
     padding-left: 45px!important;
     padding-right: 15px!important;
   }
 
   .navbar-inverse .dropdown-menu li a .glyphicon,
-  #bgContextMenu .dropdown-menu li a .glyphicon,
-  #nodeContextMenu .dropdown-menu li a .glyphicon,
-  #groupContextMenu .dropdown-menu li a .glyphicon{
+  .context-menu li a .glyphicon{
     display: inline-block;
     margin-left: -25px!important;
     margin-right: 10px!important;
