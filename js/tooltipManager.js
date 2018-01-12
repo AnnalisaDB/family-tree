@@ -27,7 +27,7 @@ var tooltipManager = function(isTouchDevice){
 
 		if (!isTouchDevice && targetSvg && !targetSvg.empty())
 			targetSvg.on('mousemove', function () {
-	            setPosition(d3.mouse(this), +targetSvg.attr('width'), +targetSvg.attr('height'));
+	            setPosition(d3.mouse(this), targetSvg.node());
 	        });
     };
 
@@ -37,20 +37,33 @@ var tooltipManager = function(isTouchDevice){
         tooltip.remove();
     };
 
-    function setPosition(pos, width, height) {
+    function setPosition(pos, container) {
         if (!tooltip || tooltip.empty())
             return;
 
         var tooltipDom = tooltip.node();
         var w_tooltip = tooltipDom.offsetWidth,
             h_tooltip = tooltipDom.offsetHeight,
-            padding = isTouchDevice ? 0 : 16, x0, y0;
-            
-        var x0 = pos[0] + padding;
-        var y0 = pos[1] + h_tooltip + padding;
+            bbox = container.getBoundingClientRect(),
+            padding = 16, 
+            x0 = pos[0], 
+            y0 = pos[1];
         
-        x0 = (x0 + w_tooltip > width) ? pos[0] - w_tooltip - padding : x0;
-        y0 = (y0 + h_tooltip > 52 + 35 + height) ? pos[1] + padding : y0;
+        if (isTouchDevice){
+            var dx = bbox.left + bbox.width - (x0 + w_tooltip),
+                dy = bbox.top + bbox.height - (y0 + h_tooltip);
+
+            x0 = (dx < 0) ? x0 + dx : x0;
+            y0 = (dy < 0) ? y0 + dy : y0;
+        } else {
+            x0 += padding;
+            y0 += padding + h_tooltip;
+        
+            x0 = (x0 + w_tooltip > bbox.left + bbox.width) ? pos[0] - w_tooltip - padding : x0;
+            y0 = (y0 + h_tooltip > bbox.top + bbox.height) ? pos[1] + padding : y0;
+        }
+        x0 = (x0 < bbox.left) ? bbox.left : x0;
+        y0 = (y0 < bbox.top) ? bbox.top : y0;
 
         tooltip.styleObj = tooltip.styleObj || {};
         tooltip.styleObj.left = x0 + 'px';
@@ -66,6 +79,11 @@ var tooltipManager = function(isTouchDevice){
         if (isTouchDevice)
             tooltip.style('pointer-events', 'none');
     };
+
+    function showAt(data, pos, container){
+        show(data);
+        setPosition(pos, container);
+    }
 
     function show(data) {
         if (!tooltip || tooltip.empty()) return;
@@ -135,6 +153,7 @@ var tooltipManager = function(isTouchDevice){
         remove:  removeTooltip,
     	setPosition: setPosition,
     	show: show,
+        showAt: showAt,
     	hide: hide
     }
 }
