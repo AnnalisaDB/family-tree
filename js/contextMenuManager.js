@@ -170,8 +170,6 @@ var contextMenuManager = function(isTouchDevice){
 		if (!d3selection || d3selection.empty() || !d3container || d3container.empty())
 			return;
 		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(){
-			event.preventDefault();
-			
 			var viewport = $('#viewport');
 			if (viewport.width() < ctxMenuMaxSize.width || viewport.height() < ctxMenuMaxSize.height){
 				hide();
@@ -180,6 +178,8 @@ var contextMenuManager = function(isTouchDevice){
 				}, 0);
 				return;
 			}
+			
+			d3.event.preventDefault();
 			
 			var p = util.getPosition(d3.event);
 			var x = p[0], y = p[1];
@@ -296,7 +296,7 @@ var contextMenuManager = function(isTouchDevice){
 			else if (id == 'groupContextMenu-center-all' && applyCallbacks.centerAll)
 				applyCallbacks.centerAll();
 			else if (id == 'groupContextMenu-details-group' && applyCallbacks.showInfo)
-				applyCallbacks.showInfo(groupCtxMenu.groupId)
+				applyCallbacks.showInfo(groupCtxMenu.groupId);
 			
 			groupCtxMenu.hide();
 		});
@@ -308,20 +308,23 @@ var contextMenuManager = function(isTouchDevice){
 
 		groupMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function(ev) {
 			var id = $(this).attr('id');
-			
-			if (id == 'groupMenu-delete' && applyCallbacks.delete){
-				applyCallbacks.delete();
-			} else if (id == 'groupMenu-edit-group'){
-				var popup = $('#group-popup');
-				popup.modal();
-			} else if (id == 'groupMenu-center-selection' && applyCallbacks.centerSelection)
-				applyCallbacks.centerSelection();
-			else if (id == 'groupMenu-center-all' && applyCallbacks.centerAll)
-				applyCallbacks.centerAll();
-			else if (id == 'groupMenu-details-group' && applyCallbacks.showInfo)
-				applyCallbacks.showInfo(groupMenu.groupId)
-			
-			groupCtxMenu.hide();
+			var groupId = groupMenu.groupId;
+			groupMenu.collapse('toggle');
+			groupMenu.one('hidden.bs.collapse', function(){
+				if (id == 'groupMenu-delete' && applyCallbacks.delete){
+					applyCallbacks.delete();
+				} else if (id == 'groupMenu-edit-group'){
+					var popup = $('#group-popup');
+					popup.modal();
+				} else if (id == 'groupMenu-center-selection' && applyCallbacks.centerSelection)
+					applyCallbacks.centerSelection();
+				else if (id == 'groupMenu-center-all' && applyCallbacks.centerAll)
+					applyCallbacks.centerAll();
+				else if (id == 'groupMenu-details-group' && applyCallbacks.showInfo)
+					applyCallbacks.showInfo(groupId);
+				
+				groupCtxMenu.hide();
+			});
 		});
 
 	};
@@ -341,8 +344,6 @@ var contextMenuManager = function(isTouchDevice){
 		var getSelectionCount = cfg.getSelectionCount;
 
 		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(group){
-			event.preventDefault();
-			
 			var popup = $('#group-popup');		
 			['text', 'width', 'height', 'textSize', 'color', 'nodes', 'id'].forEach(function(name){
 				var value = group[name];
@@ -361,7 +362,7 @@ var contextMenuManager = function(isTouchDevice){
 			var viewport = $('#viewport');
 			if (viewport.width() < ctxMenuMaxSize.width || viewport.height() < ctxMenuMaxSize.height){
 				hide();
-				groupMenu.groupId = groupId.id;
+				groupMenu.groupId = group.id;
 				setTimeout(function(){ 
 					if (getSelectionCount){
 						var count = getSelectionCount();
@@ -371,10 +372,13 @@ var contextMenuManager = function(isTouchDevice){
 				}, 0);
 				return;
 			}
-			
+
+			d3.event.preventDefault();
+
 			groupCtxMenu.groupId = group.id;
 			var p = util.getPosition(d3.event);
-			var x = p[0], y = p[1];			
+			var x = p[0], y = p[1];
+			
 			
 			groupCtxMenu.css({
 				left: x,
@@ -593,12 +597,13 @@ var contextMenuManager = function(isTouchDevice){
 
 		nodeMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function() {
 			var id = $(this).attr('id');
+			var nodeId = nodeMenu.nodeId;
 			nodeMenu.collapse('toggle');
 			nodeMenu.one('hidden.bs.collapse', function(){
 				if (id == 'nodeMenu-delete' && applyCallbacks.delete)
 					applyCallbacks.delete();
 				else if (id == 'nodeMenu-details-node' && applyCallbacks.showInfo)
-					applyCallbacks.showInfo(nodeMenu.nodeId);
+					applyCallbacks.showInfo(nodeId);
 				else if (id == 'nodeMenu-edit-node' && applyCallbacks.editNode)
 					applyCallbacks.editNode()
 				else if (id == 'nodeMenu-center-selection' && applyCallbacks.centerSelection)
@@ -779,8 +784,6 @@ var contextMenuManager = function(isTouchDevice){
 		var updateItems = cfg.updateItems;
 
 		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(node){
-			event.preventDefault();
-			
 			var popup = $('#node-popup');		
 			['id', 'name', 'surname', 'description', 'sex'].forEach(function(name){
 				var value = node[name];
@@ -807,6 +810,8 @@ var contextMenuManager = function(isTouchDevice){
 				}, 0);
 				return;
 			}
+
+			d3.event.preventDefault();
 			
 			nodeCtxMenu.nodeId = node.id;
 			var p = util.getPosition(d3.event);
