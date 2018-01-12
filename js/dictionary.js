@@ -6,6 +6,7 @@ var dictionary = (function(){
 		'Cancel': {eng: 'Cancel', ita: 'Annulla'},
 		'CenterSelection': {eng: 'Center selection', ita: 'Centra selezione'},
 		'ChooseFile': {eng: 'Choose file', ita: 'Scegli il file'},
+		'Close': {eng: 'Close', ita: 'Chiudi'},
 		'Color': {eng: 'Color', ita: 'Colore'},
 		'CreateGroup': {eng: 'Create group', ita: 'Crea gruppo'},
 		'CreateRelative': {eng: 'Create relative', ita: 'Crea familiare'},
@@ -140,6 +141,7 @@ var dictionary = (function(){
 		}
 		var $bgMenu = $('#bgMenu');
 		if ($bgMenu.length){
+			$('#bgMenu-close span.item-text').html(get('Close'));
 			$('#bgMenu-create-node span.item-text').html(get('CreateRelative'));
 			$('#bgMenu-create-group span.item-text').html(get('CreateGroup'));
 			$('#bgMenu-select-all').html(get('SelectAll') + '<span class="cmd-text">Ctrl+A</span>');
@@ -159,6 +161,7 @@ var dictionary = (function(){
 		}
 		var $nodeMenu = $('#nodeMenu');
 		if ($nodeMenu.length){
+			$('#nodeMenu-close span.item-text').html(get('Close'));
 			$('#nodeMenu-details-node span.item-text').html(get('ShowInfo'));
 			$('#nodeMenu-edit-node span.item-text').html(get('Edit'));
 			$('#nodeMenu-delete span.item-text').html(get('Delete'));
@@ -180,7 +183,8 @@ var dictionary = (function(){
 		}
 
 		var $groupMenu = $('#groupMenu');
-		if ($groupMenu.length){			
+		if ($groupMenu.length){	
+			$('#groupMenu-close span.item-text').html(get('Close'));		
 			$('#groupMenu-details-group span.item-text').html(get('ShowInfo'));
 			$('#groupMenu-edit-group span.item-text').html(get('Edit'));
 			$('#groupMenu-delete span.item-text').html(get('Delete'));
