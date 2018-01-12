@@ -3093,10 +3093,8 @@ var familyTree = function (isTouchDevice){
 			showInfo: function(nodeId){
 				var node = getNodeById(nodeId);
 				if (node){
-					var w = +svg.attr('width'),
-						h = +svg.attr('height');
-					TooltipManager.show(node);
-					TooltipManager.setPosition([w - dotRadius, dotRadius], w, h);
+					var bbox = svg.node().getBoundingClientRect();
+					TooltipManager.showAt(node, [bbox.width - dotRadius, dotRadius], svg.node());
 				}
 			},
 			editNode: function(){
@@ -3148,8 +3146,10 @@ var familyTree = function (isTouchDevice){
 			},
 			showInfo: function(groupId){
 				var group = getGroupById(groupId);
-				if (group)
-					TooltipManager.show(group);
+				if (group){
+					var bbox = svg.node().getBoundingClientRect();
+					TooltipManager.showAt(group, [bbox.width - dotRadius, bbox.top + dotRadius], svg.node());
+				}
 			},
 			centerSelection: function(){
 				centerSelection();
