@@ -62,6 +62,10 @@ var contextMenuManager = function(isTouchDevice){
 
 	function createBgMenu(){
 		var menuHtml = '<ul class="nav navbar-nav">'
+					+ '   <li><a href="#" id="bgMenu-close">'
+					+ '		 <i class="glyphicon fa fa-close"></i>'
+					+ '      <span class="item-text">Close</span>'
+					+ '   </a></li>'
 					+ '   <li><a href="#" id="bgMenu-create-node">'
 					+ '      <i class="glyphicon fa fa-user-plus"></i>'
 					+ '      <span class="item-text">Create relative</span>...'
@@ -70,13 +74,12 @@ var contextMenuManager = function(isTouchDevice){
 					+ '      <i class="glyphicon fa fa-users"></i>'
 					+ '      <span class="item-text">Create group</span>...'
 					+ '   </a></li>'
-					+ '   <li class="divider"></li>'
 					+ '   <li><a href="#" id="bgMenu-select-all">'
 					+ '      <span class="cmd-text">Ctrl+A</span>'
 					+ '      <span class="item-text">Select all</span>'
 					+ '   </a></li>'
 					+ '</ul>';
-		bgMenu = $('<div class="navbar-collapse collapse" id="bgMenu" aria-expanded="false" style=""></div>');
+		bgMenu = $('<div class="navbar-collapse collapse" id="bgMenu" aria-expanded="false"></div>');
 		bgMenu.html(menuHtml);
 		$('#viewport>div.fixed-menu.navbar').append(bgMenu);
 		if (isTouchDevice)
@@ -125,7 +128,10 @@ var contextMenuManager = function(isTouchDevice){
 			createBgMenu();
 
 		bgMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function() {
-			var id = $(this).attr('id');
+			var target = $(this),
+				id = target.attr('id');
+			
+
 			bgMenu.collapse('toggle');
 			bgMenu.one('hidden.bs.collapse', function(){
 				if (id == 'bgMenu-create-node' || id == 'bgMenu-create-group'){
@@ -237,8 +243,11 @@ var contextMenuManager = function(isTouchDevice){
 
 	function createGroupMenu(){
 		var menuHtml = '<ul class="nav navbar-nav">'
+					+ '   <li><a href="#" id="groupMenu-close">'
+					+ '		 <i class="glyphicon fa fa-close"></i>'
+					+ '      <span class="item-text">Close</span>'
+					+ '   </a></li>'
 					+ '   <li><a href="#" id="groupMenu-selection" class="disabled"></a></li>'
-					+ '   <li class="divider"></li>'
 					+ '   <li><a href="#" id="groupMenu-details-group" class="hide">'
 					+ '      <span class="glyphicon glyphicon-info-sign"></span>'
 					+ '      <span class="item-text">Show info</span>'
@@ -247,13 +256,11 @@ var contextMenuManager = function(isTouchDevice){
 					+ '      <span class="glyphicon glyphicon-pencil"></span>'
 					+ '      <span class="item-text">Edit</span>...'
 					+ '   </a></li>'
-					+ '   <li class="divider"></li>'
 					+ '   <li><a href="#" id="groupMenu-delete">'
 					+ '      <span class="cmd-text">Del</span>'
 					+ '      <span class="glyphicon glyphicon-trash"></span>'
 					+ '      <span class="item-text">Delete</span>'
 					+ '   </a></li>'
-					+ '   <li class="divider"></li>'
 					+ '   <li><a href="#" id="groupMenu-center-selection">'
 					+ '      <span class="cmd-text">S</span>'
 					+ '      <i class="glyphicon fa fa-bullseye"></i>'
@@ -265,7 +272,7 @@ var contextMenuManager = function(isTouchDevice){
 					+ '      <span class="item-text">Extend</span>'
 					+ '   </a></li>'
 					+ '</ul>';
-		groupMenu = $('<div class="navbar-collapse collapse" id="groupMenu" aria-expanded="false" style=""></div>');
+		groupMenu = $('<div class="navbar-collapse collapse" id="groupMenu" aria-expanded="false"></div>');
 		groupMenu.html(menuHtml);
 		$('#viewport>div.fixed-menu.navbar').append(groupMenu);
 
@@ -307,7 +314,9 @@ var contextMenuManager = function(isTouchDevice){
 			createGroupMenu();
 
 		groupMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function(ev) {
-			var id = $(this).attr('id');
+			var target = $(this),
+				id = target.attr('id');
+			
 			var groupId = groupMenu.groupId;
 			groupMenu.collapse('toggle');
 			groupMenu.one('hidden.bs.collapse', function(){
@@ -430,7 +439,7 @@ var contextMenuManager = function(isTouchDevice){
 					+ '   <li class="divider"></li>'
 					+ '   <li><a tabindex="-1" href="#" id="nodeContextMenu-link-to-partner">Link to partner</a></li>'
 					+ '   <li class="dropdown-submenu">'
-					+ '      <a tabindex="-1" href="#" id="add-to-group">'
+					+ '      <a tabindex="-1" href="#" id="nodeContextMenu-add-to-group">'
 					+ '         <span class="cmd-text caret-right"></span>'
 					+ '         <span class="item-text">Add to group</span>'
 					+ '      </a>'
@@ -459,8 +468,11 @@ var contextMenuManager = function(isTouchDevice){
 
 	function createNodeMenu(){
 		var menuHtml = '<ul class="nav navbar-nav">'
+					+ '   <li><a href="#" id="nodeMenu-close">'
+					+ '		 <i class="glyphicon fa fa-close"></i>'
+					+ '      <span class="item-text">Close</span>'
+					+ '   </a></li>'
 					+ '   <li><a href="#" id="nodeMenu-selection" class="disabled"></a></li>'
-					+ '   <li class="divider"></li>'
 					+ '   <li><a href="#" id="nodeMenu-details-node" class="hide">'
 					+ '      <span class="glyphicon glyphicon-info-sign"></span>'
 					+ '      <span class="item-text">Show info</span>'
@@ -469,7 +481,6 @@ var contextMenuManager = function(isTouchDevice){
 					+ '      <span class="glyphicon glyphicon-pencil"></span>'
 					+ '      <span class="item-text">Edit</span>...'
 					+ '   </a></li>'
-					+ '   <li class="divider"></li>'
 					+ '   <li><a href="#" id="nodeMenu-delete">'
 					+ '      <span class="cmd-text">Del</span>'
 					+ '      <span class="glyphicon glyphicon-trash"></span>'
@@ -486,25 +497,24 @@ var contextMenuManager = function(isTouchDevice){
 					+ '      <span class="glyphicon glyphicon-fullscreen"></span>'
 					+ '      <span class="item-text">Extend</span>'
 					+ '   </a></li>'
-					+ '   <li class="divider"></li>'
 					+ '   <li><a href="#" id="nodeMenu-link-to-partner">Link to partner</a></li>'
-					+ '   <li class="dropdown-submenu">'
-					+ '      <a href="#" id="add-to-group">'
-					+ '         <span class="cmd-text caret-right"></span>'
+					+ '   <li class="dropdown">'
+					+ '      <a href="#" id="nodeMenu-add-to-group" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">'
 					+ '         <span class="item-text">Add to group</span>'
+					+ '			<b class="caret"></b>'
 					+ '      </a>'
 					+ '      <ul class="dropdown-menu"><li>'
 					+ '         <a href="#" id="nodeMenu-add-to-new-group"><span class="item-text">New group</span>...</a>'
 					+ '      </li></ul>'
-					+ '   <li class="dropdown-submenu">'
-					+ '      <a href="#" id="nodeContextMenu-remove-from-group">'
-					+ '         <span class="cmd-text caret-right"></span>'
+					+ '   <li class="dropdown">'
+					+ '      <a href="#" id="nodeContextMenu-remove-from-group" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">'
 					+ '         <span class="item-text">Remove from group</span>'
+					+ '			<b class="caret"></b>'
 					+ '      </a>'
 					+ '      <ul class="dropdown-menu"></ul>'
 					+ '   </li>'
 					+ '</ul>';
-		nodeMenu = $('<div class="navbar-collapse collapse" id="nodeMenu" aria-expanded="false" style=""></div>');
+		nodeMenu = $('<div class="navbar-collapse collapse" id="nodeMenu" aria-expanded="false"></div>');
 		nodeMenu.html(menuHtml);
 		$('#viewport>div.fixed-menu.navbar').append(nodeMenu);
 		if (isTouchDevice){
@@ -596,8 +606,13 @@ var contextMenuManager = function(isTouchDevice){
 			createNodeMenu();
 
 		nodeMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function() {
-			var id = $(this).attr('id');
+			var target = $(this),
+				id = target.attr('id');
 			var nodeId = nodeMenu.nodeId;
+
+			if (id == 'nodeMenu-add-to-group' || id == 'nodeMenu-remove-from-group'){
+				return;
+			}
 			nodeMenu.collapse('toggle');
 			nodeMenu.one('hidden.bs.collapse', function(){
 				if (id == 'nodeMenu-delete' && applyCallbacks.delete)
@@ -658,7 +673,7 @@ var contextMenuManager = function(isTouchDevice){
 
 	function updateAddToGroupsItem(groupsList, callback){
 		callback = callback || function(){};
-		var $li = $('#add-to-group').parent('li'),
+		var $li = $('#nodeContextMenu-add-to-group').parent('li'),
 			menu = $li.find('.dropdown-menu');
 
 		menu.off(isTouchDevice ? 'touchstart' : 'click', '.existing-group a');
