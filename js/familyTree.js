@@ -944,7 +944,7 @@ var familyTree = function (isTouchDevice){
 	            return;
 
 	        if (isResizingGroup == group && !util.selectionMode.isMulti()){
-	    		onResizingGroup(isResizingGroup, posOnDrag);
+	    		onResizingGroup(isResizingGroup, pos);
 				return;
 	    	}  
 
