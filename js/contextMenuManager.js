@@ -467,7 +467,7 @@ var contextMenuManager = function(isTouchDevice){
 		$('#main-script').before(nodeCtxMenu);
 
 		if (isTouchDevice){
-			$('.cmd-text:not(.caret-right),#selection-area-item').addClass('hide');
+			$('.cmd-text:not(.caret-right),#selection-area-item,#nodeContextMenu-link-to-partner').addClass('hide');
 			$('#nodeContextMenu-details-node').removeClass('hide');
 		}
 	};
@@ -527,7 +527,7 @@ var contextMenuManager = function(isTouchDevice){
 			.append(nodeMenu);
 
 		if (isTouchDevice){
-			$('.cmd-text:not(.caret-right),#selection-area-item').addClass('hide');
+			$('.cmd-text:not(.caret-right),#selection-area-item,#nodeMenu-link-to-partner').addClass('hide');
 			$('#nodeMenu-details-node').removeClass('hide');
 		}
 	};
