@@ -61,7 +61,7 @@ var contextMenuManager = function(isTouchDevice){
 	};
 
 	function createBgMenu(){
-		var menuHtml = '<ul class="nav navbar-nav">'
+		var menuHtml = '<ul class="nav navbar-nav" >'
 					+ '   <li><a href="#" id="bgMenu-close">'
 					+ '		 <i class="glyphicon fa fa-close"></i>'
 					+ '      <span class="item-text">Close</span>'
@@ -79,9 +79,11 @@ var contextMenuManager = function(isTouchDevice){
 					+ '      <span class="item-text">Select all</span>'
 					+ '   </a></li>'
 					+ '</ul>';
-		bgMenu = $('<div class="navbar-collapse collapse" id="bgMenu" aria-expanded="false"></div>');
+		bgMenu = $('<div id="bgMenu" class="collapse"></div>');
 		bgMenu.html(menuHtml);
-		$('#viewport>div.fixed-menu.navbar').append(bgMenu);
+		$('#viewport>div.fixed-menu')
+			.append($('<a href="#" data-toggle="collapse" id="bgMenu-toggle" data-target="#bgMenu"></a>'))
+			.append(bgMenu);
 		if (isTouchDevice)
 			$('.cmd-text:not(.caret-right),#selection-area-item').addClass('hide');
 	};
@@ -130,9 +132,9 @@ var contextMenuManager = function(isTouchDevice){
 		bgMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function() {
 			var target = $(this),
 				id = target.attr('id');
-			
 
 			bgMenu.collapse('toggle');
+			
 			bgMenu.one('hidden.bs.collapse', function(){
 				if (id == 'bgMenu-create-node' || id == 'bgMenu-create-group'){
 					var $viewport = $('#viewport'),
@@ -159,7 +161,7 @@ var contextMenuManager = function(isTouchDevice){
 					}
 				}
 				else if (id == 'bgMenu-select-all' && applyCallbacks.selectAll)
-					applyCallbacks.selectAll();		
+					applyCallbacks.selectAll();
 			});				
 		});
 
@@ -178,10 +180,12 @@ var contextMenuManager = function(isTouchDevice){
 		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(){
 			var viewport = $('#viewport');
 			if (viewport.width() < ctxMenuMaxSize.width || viewport.height() < ctxMenuMaxSize.height){
-				hide();
-				setTimeout(function(){ 
-					bgMenu.collapse('toggle'); 
-				}, 0);
+				hide(bgMenu);
+				if (!bgMenu.is(':visible')){
+					setTimeout(function(){
+						bgMenu.collapse('toggle'); 
+					}, 0);
+				}
 				return;
 			}
 			
@@ -272,9 +276,11 @@ var contextMenuManager = function(isTouchDevice){
 					+ '      <span class="item-text">Extend</span>'
 					+ '   </a></li>'
 					+ '</ul>';
-		groupMenu = $('<div class="navbar-collapse collapse" id="groupMenu" aria-expanded="false"></div>');
+		groupMenu = $('<div class="collapse" id="groupMenu"></div>');
 		groupMenu.html(menuHtml);
-		$('#viewport>div.fixed-menu.navbar').append(groupMenu);
+		$('#viewport>div.fixed-menu')
+			.append($('<a href="#" data-toggle="collapse" id="groupMenu-toggle" data-target="#groupMenu"></a>'))
+			.append(groupMenu);
 
 		if (isTouchDevice){
 			$('.cmd-text:not(.caret-right),#selection-area-item').addClass('hide');
@@ -468,14 +474,14 @@ var contextMenuManager = function(isTouchDevice){
 
 	function createNodeMenu(){
 		var menuHtml = '<ul class="nav navbar-nav">'
-					+ '   <li><a href="#" id="nodeMenu-close">'
-					+ '		 <i class="glyphicon fa fa-close"></i>'
-					+ '      <span class="item-text">Close</span>'
-					+ '   </a></li>'
 					+ '   <li><a href="#" id="nodeMenu-selection" class="disabled"></a></li>'
 					+ '   <li><a href="#" id="nodeMenu-details-node" class="hide">'
 					+ '      <span class="glyphicon glyphicon-info-sign"></span>'
 					+ '      <span class="item-text">Show info</span>'
+					+ '   </a></li>'
+					+ '   <li><a href="#" id="nodeMenu-close">'
+					+ '		 <i class="glyphicon fa fa-close"></i>'
+					+ '      <span class="item-text">Close</span>'
 					+ '   </a></li>'
 					+ '   <li><a href="#" id="nodeMenu-edit-node">'
 					+ '      <span class="glyphicon glyphicon-pencil"></span>'
@@ -514,9 +520,12 @@ var contextMenuManager = function(isTouchDevice){
 					+ '      <ul class="dropdown-menu"></ul>'
 					+ '   </li>'
 					+ '</ul>';
-		nodeMenu = $('<div class="navbar-collapse collapse" id="nodeMenu" aria-expanded="false"></div>');
+		nodeMenu = $('<div class="collapse" id="nodeMenu"></div>');
 		nodeMenu.html(menuHtml);
-		$('#viewport>div.fixed-menu.navbar').append(nodeMenu);
+		$('#viewport>div.fixed-menu')
+			.append($('<a href="#" data-toggle="collapse" id="nodeMenu-toggle" data-target="#nodeMenu"></a>'))
+			.append(nodeMenu);
+
 		if (isTouchDevice){
 			$('.cmd-text:not(.caret-right),#selection-area-item').addClass('hide');
 			$('#nodeMenu-details-node').removeClass('hide');
@@ -891,24 +900,25 @@ var contextMenuManager = function(isTouchDevice){
 		return bgCtxMenu;
 	}
 
-	function hide(){
-		if (bgCtxMenu && bgCtxMenu.length)
+	function hide(except){
+		if (bgCtxMenu && except != bgCtxMenu && bgCtxMenu.length)
 			bgCtxMenu.hide();
-		if (bgMenu && bgMenu.length && bgMenu.is(':visible'))
+		if (bgMenu && except != bgMenu && bgMenu.length && bgMenu.is(':visible')){
 			bgMenu.collapse('toggle');
-		if (nodeCtxMenu && nodeCtxMenu.length){
+		}
+		if (nodeCtxMenu && except != nodeCtxMenu && nodeCtxMenu.length){
 			nodeCtxMenu.hide();
 			nodeCtxMenu.nodeId = null;
 		}
-		if (nodeMenu && nodeMenu.length && nodeMenu.is(':visible')){
+		if (nodeMenu && except != nodeMenu && nodeMenu.length && nodeMenu.is(':visible')){
 			nodeMenu.collapse('toggle');
 			nodeMenu.nodeId = null;
 		}
-		if (groupCtxMenu && groupCtxMenu.length){
+		if (groupCtxMenu && except != groupCtxMenu && groupCtxMenu.length){
 			groupCtxMenu.hide();
 			groupCtxMenu.groupId = null;
 		}
-		if (groupMenu && groupMenu.length && groupMenu.is(':visible')){
+		if (groupMenu && except != groupMenu && groupMenu.length && groupMenu.is(':visible')){
 			groupMenu.collapse('toggle');
 			groupMenu.groupId = null;
 		}
