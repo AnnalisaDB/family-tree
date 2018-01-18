@@ -156,8 +156,8 @@ input.form-control {
   overflow-y: auto;
 }
 .fixed-menu .navbar-nav a {
-    margin-right: 15px !important;
-    margin-left: 45px !important;
+    margin-right: 15px;
+    margin-left: 45px;
 }
 .context-menu {
   position: absolute;
