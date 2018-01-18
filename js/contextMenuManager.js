@@ -180,7 +180,7 @@ var contextMenuManager = function(isTouchDevice){
 		d3selection.on(isTouchDevice ? 'touchstart' : 'contextmenu', function(){
 			var viewport = $('#viewport');
 			if (viewport.width() < ctxMenuMaxSize.width || viewport.height() < ctxMenuMaxSize.height){
-				hide(bgMenu);
+				hide();
 				if (!bgMenu.is(':visible')){
 					setTimeout(function(){
 						bgMenu.collapse('toggle'); 
@@ -206,7 +206,7 @@ var contextMenuManager = function(isTouchDevice){
 
 	function createGroupCtxMenu(){
 		var menuHtml = '<ul class="dropdown-menu" role="menu">'
-					+ '   <li><a tabindex="-1" href="#" id="groupContextMenu-selection" class="disabled"></a></li>'
+					+ '   <li><a tabindex="-1" href="#" id="groupContextMenu-selection" class="disabled" style="margin-left: 20px;"></a></li>'
 					+ '   <li class="divider"></li>'
 					+ '   <li><a tabindex="-1" href="#" id="groupContextMenu-details-group" class="hide">'
 					+ '      <span class="glyphicon glyphicon-info-sign"></span>'
@@ -247,11 +247,12 @@ var contextMenuManager = function(isTouchDevice){
 
 	function createGroupMenu(){
 		var menuHtml = '<ul class="nav navbar-nav">'
+					+ '   <li><a href="#" id="groupMenu-selection" class="disabled" style="margin-left: 20px;"></a></li>'
 					+ '   <li><a href="#" id="groupMenu-close">'
 					+ '		 <i class="glyphicon fa fa-close"></i>'
 					+ '      <span class="item-text">Close</span>'
 					+ '   </a></li>'
-					+ '   <li><a href="#" id="groupMenu-selection" class="disabled"></a></li>'
+					
 					+ '   <li><a href="#" id="groupMenu-details-group" class="hide">'
 					+ '      <span class="glyphicon glyphicon-info-sign"></span>'
 					+ '      <span class="item-text">Show info</span>'
@@ -415,7 +416,7 @@ var contextMenuManager = function(isTouchDevice){
 
 	function createNodeCtxMenu(){
 		var menuHtml = '<ul class="dropdown-menu" role="menu">'
-					+ '   <li><a tabindex="-1" href="#" id="nodeContextMenu-selection" class="disabled"></a></li>'
+					+ '   <li><a tabindex="-1" href="#" id="nodeContextMenu-selection" class="disabled" style="margin-left: 20px;"></a></li>'
 					+ '   <li class="divider"></li>'
 					+ '   <li><a tabindex="-1" href="#" id="nodeContextMenu-details-node" class="hide">'
 					+ '      <span class="glyphicon glyphicon-info-sign"></span>'
@@ -474,7 +475,7 @@ var contextMenuManager = function(isTouchDevice){
 
 	function createNodeMenu(){
 		var menuHtml = '<ul class="nav navbar-nav">'
-					+ '   <li><a href="#" id="nodeMenu-selection" class="disabled"></a></li>'
+					+ '   <li><a href="#" id="nodeMenu-selection" class="disabled" style="margin-left: 20px;"></a></li>'
 					+ '   <li><a href="#" id="nodeMenu-details-node" class="hide">'
 					+ '      <span class="glyphicon glyphicon-info-sign"></span>'
 					+ '      <span class="item-text">Show info</span>'
@@ -614,14 +615,12 @@ var contextMenuManager = function(isTouchDevice){
 		if (!nodeMenu || !nodeMenu.length)
 			createNodeMenu();
 
-		nodeMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a', function() {
-			var target = $(this),
+		nodeMenu.on(isTouchDevice ? 'touchstart' : 'click', 'a:not(#nodeMenu-add-to-group, #nodeMenu-remove-from-group)', function() {
+			var el = this,
+				target = $(this),
 				id = target.attr('id');
 			var nodeId = nodeMenu.nodeId;
 
-			if (id == 'nodeMenu-add-to-group' || id == 'nodeMenu-remove-from-group'){
-				return;
-			}
 			nodeMenu.collapse('toggle');
 			nodeMenu.one('hidden.bs.collapse', function(){
 				if (id == 'nodeMenu-delete' && applyCallbacks.delete)
@@ -636,29 +635,23 @@ var contextMenuManager = function(isTouchDevice){
 					applyCallbacks.centerAll();
 				else if (id == 'nodeMenu-link-to-partner' && applyCallbacks.linkToPartner)
 					applyCallbacks.linkToPartner();
-				else {
-					console.log('id', id)
-				}
-				/*else if (id == 'nodeMenu-add-to-group' || id == 'nodeMenu-remove-from-group'){
-					if (isTouchDevice)
-						return;
-					event.stopPropagation();
-					event.preventDefault();
-				} else if ((id == 'nodeMenu-add-to-new-group' || id.indexOf('nodeMenu-add-to-existing-group-') != -1) || 
-						(id == 'nodeMenu-remove-from-group' || id.indexOf('nodeMenu-remove-from-existing-group-') != -1)){
-					var el = this;
-					while (el && el.className.indexOf('dropdown-menu') == -1)
+				else if ((id == 'nodeMenu-add-to-new-group' || id.indexOf('nodeMenu-add-to-existing-group-') != -1) || 
+					(id == 'nodeMenu-remove-from-group' || id.indexOf('nodeMenu-remove-from-existing-group-') != -1)){
+					while (el && el.className.indexOf('dropdown') == -1)
 						el = el.parentNode;
 					if (el)
-						$(el).hide();
-					if (id == 'nodeContextMenu-add-to-new-group'){
-						var left = +nodeCtxMenu.css('left').replace('px',''), 
-						top = +nodeCtxMenu.css('top').replace('px',''); 
+						$(el).find('a.dropdown-toggle').dropdown('toggle');
+					if (id == 'nodeMenu-add-to-new-group'){
+						var viewport = $('#viewport'),
+							x = viewport.width() * 0.5,
+							y = viewport.height() * 0.5;
 						if (applyCallbacks.getTmpGroup)
-							tmpGroup = applyCallbacks.getTmpGroup(left, top)
+							tmpGroup = applyCallbacks.getTmpGroup(x, y)
 						$('#group-popup').modal();
 					}
-				}*/
+				} else {
+					console.log(id, target)
+				}
 			});
 		});
 	};
@@ -900,25 +893,25 @@ var contextMenuManager = function(isTouchDevice){
 		return bgCtxMenu;
 	}
 
-	function hide(except){
-		if (bgCtxMenu && except != bgCtxMenu && bgCtxMenu.length)
+	function hide(){
+		if (bgCtxMenu && bgCtxMenu.length)
 			bgCtxMenu.hide();
-		if (bgMenu && except != bgMenu && bgMenu.length && bgMenu.is(':visible')){
+		if (bgMenu && bgMenu.length && bgMenu.is(':visible')){
 			bgMenu.collapse('toggle');
 		}
-		if (nodeCtxMenu && except != nodeCtxMenu && nodeCtxMenu.length){
+		if (nodeCtxMenu && nodeCtxMenu.length){
 			nodeCtxMenu.hide();
 			nodeCtxMenu.nodeId = null;
 		}
-		if (nodeMenu && except != nodeMenu && nodeMenu.length && nodeMenu.is(':visible')){
+		if (nodeMenu  && nodeMenu.length && nodeMenu.is(':visible')){
 			nodeMenu.collapse('toggle');
 			nodeMenu.nodeId = null;
 		}
-		if (groupCtxMenu && except != groupCtxMenu && groupCtxMenu.length){
+		if (groupCtxMenu  && groupCtxMenu.length){
 			groupCtxMenu.hide();
 			groupCtxMenu.groupId = null;
 		}
-		if (groupMenu && except != groupMenu && groupMenu.length && groupMenu.is(':visible')){
+		if (groupMenu  && groupMenu.length && groupMenu.is(':visible')){
 			groupMenu.collapse('toggle');
 			groupMenu.groupId = null;
 		}
