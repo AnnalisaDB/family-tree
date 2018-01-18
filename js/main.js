@@ -407,7 +407,7 @@ langMenu.parent().find('li').each(function(){
 });	
 
 $('#viewport').on(eventStart, function(){
-	$('.dropdown.open').trigger(eventStart);
+	$('nav.dropdown.open').trigger(eventStart);
 });
 
 // multi selection navbar
