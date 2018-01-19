@@ -3628,7 +3628,7 @@ var familyTree = function (isTouchDevice){
         
         svgToCapture.attr({
                 'xmlns': 'http://www.w3.org/2000/svg',
-                'xmlns:xmlns:xlink': 'http://www.w3.org/1999/xlink', // hack: doubling xmlns: so it doesn't disappear once in the DOM
+                'xmlns:xlink': 'http://www.w3.org/1999/xlink', // hack: doubling xmlns: so it doesn't disappear once in the DOM
                 version: '1.1',
                 id: 'clone-svg-viewport',
                 width: w,
