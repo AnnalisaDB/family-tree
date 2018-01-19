@@ -103,7 +103,7 @@ var contextMenuManager = function(isTouchDevice){
 				var left = +bgCtxMenu.css('left').replace('px',''), 
 					top = +bgCtxMenu.css('top').replace('px',''); 
 				
-				var type = id.substring(7);
+				var type = id.substring(21);
 
 				if (applyCallbacks.editNewObject)
 					applyCallbacks.editNewObject(type, left, top);
