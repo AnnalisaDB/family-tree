@@ -18,13 +18,12 @@ The `Tudors.json` is an example of family tree which can be uploaded and rendere
 
 ### Relatives
 
-It is quite easy to create a relative. If you right-clicks in every point of the viewport, a context menu with several items will display. 
+It is quite easy to create a relative. If you right-click in every point (or touch the three vertical dots at top-right) of the viewport, a context menu with several items will display. 
 You have to choose `Create relative...` item and a popup will be shown. 
-This window allows you to edit details of the relative and you can submit changes by clicking over the `Save` button.
+This window allows you to edit details of the relative and you can submit changes by clicking over (or touch) the `Save` button.
 Finally the new relative-node will be rendered in the viewport at the same position you right-clicked.
 
-You can change details of a relative by right-clicking over it and selecting `Edit...` menu item. The popup that is displayed allows you to edit details 
-and submit changes by clicking over the `Save` button as well as for the creation just described before.
+You can change details of a relative by right-clicking over (touching the three vertical dots at top-right of) it and selecting `Edit...` menu item. The popup that is displayed allows you to edit details and submit changes by clicking over (or touching) the `Save` button as well as for the creation just described before.
 
 You can drag and drop one or more selected relatives.
 
@@ -46,7 +45,7 @@ They can be created in two ways:
 #### Relationships between a couple and sons/daughters
 
 The relationships between a couple and sons/daughters are represented as links anchored to a partner-relationship link and a relative-node.
-The creation of this type of relationship starts by clicking over circular port displayed in the middle of partner-relationship link.
+The creation of this type of relationship starts by clicking over (or touching) circular port displayed in the middle of partner-relationship link.
 Then user has to drag and drop the end of link when it anchors to relative-node which will be new son or daughter. That's it!
 
 
@@ -60,7 +59,7 @@ A grouping element consists of tree objects:
  * a segment linking the previous two objects 
  
 Only text area can be dragged and dropped. If user moves one or more relatives of a group, the bordered rectangle will be updated to keep on containing them.
-Once user right-clicks over a selected relative-node, it can add it to (or remove it from) a new group or an existing one by choosing the related item of context menu.
+Once user right-clicks over (touches the three vertical dots at top-right of) a selected relative-node, it can add it to (or remove it from) a new group or an existing one by choosing the related item of context menu.
 
 ### Shortcuts
 
@@ -79,4 +78,3 @@ The following list reports all available shortcuts:
 
  * Find relatives and groups by typing text in a special searching field
  * Enable the attachment of image to relative
- * Enable features for touch devices
