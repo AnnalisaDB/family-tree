@@ -569,9 +569,7 @@ var contextMenuManager = function(isTouchDevice){
 				event.preventDefault();
 			} else if ((id == 'nodeContextMenu-add-to-new-group' || id.indexOf('nodeContextMenu-add-to-existing-group-') != -1) || 
 					(id == 'nodeContextMenu-remove-from-group' || id.indexOf('nodeContextMenu-remove-from-existing-group-') != -1)){
-				var el = this;
-				while (el && el.className.indexOf('dropdown-menu') == -1)
-					el = el.parentNode;
+				var el = util.getAncestorByClass(this, 'dropdown-menu');
 				if (el)
 					$(el).hide();
 				if (id == 'nodeContextMenu-add-to-new-group'){
@@ -636,8 +634,7 @@ var contextMenuManager = function(isTouchDevice){
 					applyCallbacks.linkToPartner();
 				else if ((id == 'nodeMenu-add-to-new-group' || id.indexOf('nodeMenu-add-to-existing-group-') != -1) || 
 					(id == 'nodeMenu-remove-from-group' || id.indexOf('nodeMenu-remove-from-existing-group-') != -1)){
-					while (el && el.className.indexOf('dropdown') == -1)
-						el = el.parentNode;
+					el = util.getAncestorByClass(el, 'dropdown');
 					if (el)
 						$(el).find('a.dropdown-toggle').dropdown('toggle');
 					if (id == 'nodeMenu-add-to-new-group'){
@@ -722,9 +719,8 @@ var contextMenuManager = function(isTouchDevice){
 			menu_ctx.on(isTouchDevice ? 'touchstart' : 'click', '.existing-group a', function(){
 				var el = this,
 					$el = $(this),
-					id = $el.attr('id').substring(22);
-				while (el && el.className.indexOf('dropdown-menu') == -1)
-					el = el.parentNode;
+					id = $el.attr('id').substring(38);
+				var el = util.getAncestorByClass(el, 'dropdown-menu');
 				if (el)
 					$(el).hide();
 				nodeCtxMenu.hide();
@@ -789,8 +785,8 @@ var contextMenuManager = function(isTouchDevice){
 			menu_ctx.on(isTouchDevice ? 'touchstart' : 'click', '.existing-group a', function(){
 				var el = this,
 					$el = $(this),
-					id = $el.attr('id').substring(27);
-				while (el && el.className.indexOf('dropdown-menu') == -1)
+					id = $el.attr('id').substring(43);
+				el = util.getAncestorByClass(el, 'dropdown-menu');
 					el = el.parentNode;
 				if (el)
 					$(el).hide();
@@ -803,8 +799,6 @@ var contextMenuManager = function(isTouchDevice){
 				var el = this,
 					$el = $(this),
 					id = $el.attr('id').substring(36);
-				while (el && el.className.indexOf('dropdown-menu') == -1)
-					el = el.parentNode;
 				nodeMenu.collapse('toggle');
 				nodeMenu.one('hidden.bs.collapse', function(){
 					callback(id);
