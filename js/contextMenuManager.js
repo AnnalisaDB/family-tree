@@ -251,8 +251,7 @@ var contextMenuManager = function(isTouchDevice){
 					+ '   <li><a href="#" id="groupMenu-close">'
 					+ '		 <i class="glyphicon fa fa-close"></i>'
 					+ '      <span class="item-text">Close</span>'
-					+ '   </a></li>'
-					
+					+ '   </a></li>'					
 					+ '   <li><a href="#" id="groupMenu-details-group" class="hide">'
 					+ '      <span class="glyphicon glyphicon-info-sign"></span>'
 					+ '      <span class="item-text">Show info</span>'
@@ -476,14 +475,14 @@ var contextMenuManager = function(isTouchDevice){
 	function createNodeMenu(){
 		var menuHtml = '<ul class="nav navbar-nav">'
 					+ '   <li><a href="#" id="nodeMenu-selection" class="disabled" style="margin-left: 20px;"></a></li>'
-					+ '   <li><a href="#" id="nodeMenu-details-node" class="hide">'
-					+ '      <span class="glyphicon glyphicon-info-sign"></span>'
-					+ '      <span class="item-text">Show info</span>'
-					+ '   </a></li>'
 					+ '   <li><a href="#" id="nodeMenu-close">'
 					+ '		 <i class="glyphicon fa fa-close"></i>'
 					+ '      <span class="item-text">Close</span>'
 					+ '   </a></li>'
+					+ '   <li><a href="#" id="nodeMenu-details-node" class="hide">'
+					+ '      <span class="glyphicon glyphicon-info-sign"></span>'
+					+ '      <span class="item-text">Show info</span>'
+					+ '   </a></li>'					
 					+ '   <li><a href="#" id="nodeMenu-edit-node">'
 					+ '      <span class="glyphicon glyphicon-pencil"></span>'
 					+ '      <span class="item-text">Edit</span>...'
@@ -514,7 +513,7 @@ var contextMenuManager = function(isTouchDevice){
 					+ '         <a href="#" id="nodeMenu-add-to-new-group"><span class="item-text">New group</span>...</a>'
 					+ '      </li></ul>'
 					+ '   <li class="dropdown">'
-					+ '      <a href="#" id="nodeContextMenu-remove-from-group" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">'
+					+ '      <a href="#" id="nodeMenu-remove-from-group" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">'
 					+ '         <span class="item-text">Remove from group</span>'
 					+ '			<b class="caret"></b>'
 					+ '      </a>'
@@ -649,8 +648,6 @@ var contextMenuManager = function(isTouchDevice){
 							tmpGroup = applyCallbacks.getTmpGroup(x, y)
 						$('#group-popup').modal();
 					}
-				} else {
-					console.log(id, target)
 				}
 			});
 		});
@@ -675,17 +672,27 @@ var contextMenuManager = function(isTouchDevice){
 
 	function updateAddToGroupsItem(groupsList, callback){
 		callback = callback || function(){};
-		var $li = $('#nodeContextMenu-add-to-group').parent('li'),
+		
+		// context menu
+		var $li_ctx = $('#nodeContextMenu-add-to-group').parent('li'),
+			menu_ctx = $li_ctx.find('.dropdown-menu');
+
+		var $li = $('#nodeMenu-add-to-group').parent('li'),
 			menu = $li.find('.dropdown-menu');
 
+		menu_ctx.off(isTouchDevice ? 'touchstart' : 'click', '.existing-group a');
 		menu.off(isTouchDevice ? 'touchstart' : 'click', '.existing-group a');
 
 		// remove last groups list
-		menu.find('.existing-group,.divider').each(function(){
+		menu_ctx.find('.existing-group,.divider').each(function(){
+			$(this).remove();
+		});
+		menu.find('.existing-group').each(function(){
 			$(this).remove();
 		});
 		
-		var lastEl = menu.find('#nodeContextMenu-add-to-new-group').parent('li');
+		var lastEl_ctx = menu.find('#nodeContextMenu-add-to-new-group').parent('li');
+		var lastEl = menu.find('#nodeMenu-add-to-new-group').parent('li');
 
 		if (groupsList && groupsList.length){
 			groupsList.sort(function(a, b) {
@@ -699,15 +706,20 @@ var contextMenuManager = function(isTouchDevice){
 
 			groupsList.forEach(function(g){
 				var text = g.text.split(/\r\n|\r|\n/),
-					li = '<li class="existing-group"><a tabindex="-1" href="#" id="nodeContextMenu-add-to-existing-group-' + g.id + '">';
+					li_ctx = '<li class="existing-group"><a tabindex="-1" href="#" id="nodeContextMenu-add-to-existing-group-' + g.id + '">',
+					li = '<li class="existing-group"><a tabindex="-1" href="#" id="nodeMenu-add-to-existing-group-' + g.id + '">';
+				li_ctx += text[0];
 				li += text[0];
-				if (text.length > 1) 
+				if (text.length > 1) {
+					li_ctx += '...</a></li>';
 					li += '...</a></li>';
+				}
+				lastEl_ctx.before(li_ctx);
 				lastEl.before(li);
 			});
-			lastEl.before('<li class="divider"></li>');
+			lastEl_ctx.before('<li class="divider"></li>');
 
-			menu.on(isTouchDevice ? 'touchstart' : 'click', '.existing-group a', function(){
+			menu_ctx.on(isTouchDevice ? 'touchstart' : 'click', '.existing-group a', function(){
 				var el = this,
 					$el = $(this),
 					id = $el.attr('id').substring(22);
@@ -719,17 +731,33 @@ var contextMenuManager = function(isTouchDevice){
 
 				callback(id);
 			});
+
+			menu.on(isTouchDevice ? 'touchstart' : 'click', '.existing-group a', function(){
+				var el = this,
+					$el = $(this),
+					id = $el.attr('id').substring(31);
+				nodeMenu.collapse('toggle');
+				nodeMenu.one('hidden.bs.collapse', function(){
+					callback(id);
+				});
+			});
 		}
 	};
 
 	function updateRemoveFromGroupsItem(groupsList, callback){
 		callback = callback || function(){};
-		var $li = $('#nodeContextMenu-remove-from-group').parent('li'),
+		var $li_ctx = $('#nodeContextMenu-remove-from-group').parent('li'),
+			menu_ctx = $li_ctx.find('.dropdown-menu');
+		var $li = $('#nodeMenu-remove-from-group').parent('li'),
 			menu = $li.find('.dropdown-menu');
 
+		menu_ctx.off(isTouchDevice ? 'touchstart' : 'click', '.existing-group a');
 		menu.off(isTouchDevice ? 'touchstart' : 'click', '.existing-group a');
 
 		// remove last groups list
+		menu_ctx.find('.existing-group').each(function(){
+			$(this).remove();
+		});
 		menu.find('.existing-group').each(function(){
 			$(this).remove();
 		});
@@ -746,14 +774,19 @@ var contextMenuManager = function(isTouchDevice){
 
 			groupsList.forEach(function(g){
 				var text = g.text.split(/\r\n|\r|\n/),
-					li = '<li class="existing-group"><a tabindex="-1" href="#" id="nodeContextMenu-remove-from-existing-group-' + g.id + '">';
+					li_ctx = '<li class="existing-group"><a tabindex="-1" href="#" id="nodeContextMenu-remove-from-existing-group-' + g.id + '">',
+					li = '<li class="existing-group"><a tabindex="-1" href="#" id="nodeMenu-remove-from-existing-group-' + g.id + '">';
+				li_ctx += text[0];
 				li += text[0];
-				if (text.length > 1) 
+				if (text.length > 1){
+					li_ctx += '...</a></li>';
 					li += '...</a></li>';
+				}
+				menu_ctx.append(li_ctx);
 				menu.append(li);
 			});
 			
-			menu.on(isTouchDevice ? 'touchstart' : 'click', '.existing-group a', function(){
+			menu_ctx.on(isTouchDevice ? 'touchstart' : 'click', '.existing-group a', function(){
 				var el = this,
 					$el = $(this),
 					id = $el.attr('id').substring(27);
@@ -766,10 +799,24 @@ var contextMenuManager = function(isTouchDevice){
 				callback(id);
 			});
 
-			$li.find('#nodeContextMenu-remove-from-group').removeClass('disabled');
+			menu.on(isTouchDevice ? 'touchstart' : 'click', '.existing-group a', function(){
+				var el = this,
+					$el = $(this),
+					id = $el.attr('id').substring(36);
+				while (el && el.className.indexOf('dropdown-menu') == -1)
+					el = el.parentNode;
+				nodeMenu.collapse('toggle');
+				nodeMenu.one('hidden.bs.collapse', function(){
+					callback(id);
+				});
+			});
+
+			$li_ctx.find('#nodeContextMenu-remove-from-group').removeClass('disabled');
+			$li.find('#nodeMenu-remove-from-group').removeClass('disabled');
 			return;
 		}
-		$li.find('#nodeContextMenu-remove-from-group').addClass('disabled');
+		$li_ctx.find('#nodeContextMenu-remove-from-group').addClass('disabled');
+		$li.find('#nodeMenu-remove-from-group').addClass('disabled');
 	};
 
 	function resetNodeMenu(){
