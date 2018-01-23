@@ -233,6 +233,12 @@
 							<li id="ita-item"><a href = "#">Ita</a></li>
 						</ul>
 					</li>
+					<form class="navbar-form hide" id="search-field">
+						<div class="input-group">
+							<span class="input-group-addon glyphicon glyphicon-search" id="search-icon"></span>
+      						<input type="text" class="form-control" placeholder="Search">
+						</div>
+					</form>
 				</ul>
 		   </div>
 		</nav>
@@ -500,7 +506,30 @@
 				</div>
 			</div>
 			<div class="fixed-menu container-fluid navbar-inverse"></div>
-		</div>	
+			<div class="panel panel-default" id="search-result-list" style="display: none;">
+				<div class="panel-heading">
+	      			<span id="close-search-result-list" style="display: inline-block; float: right; font-size: 20px; margin-top: -5px; cursor: pointer;">
+	      				<i class="glyphicon fa fa-close" style="color: #555;"></i>
+	      			</span>
+	      			<h4 class="panel-title">
+	        			Results for: <span>query</span>
+	      			</h4>
+	    		</div>
+    			<div class="panel-body">
+					<table class="table table-sm table-striped table-dark">
+  						<thead>
+    						<tr>
+      							<th scope="col">Element</th>
+      							<th scope="col">Name</th>
+      							<th scope="col">Surname</th>
+      							<th scope="col">Description</th>
+    						</tr>
+  						</thead>
+  						<tbody>
+  						</tbody>
+				</table>
+			</div>
+		</div>
 		<script id="main-script" src="js/main.js" type="text/javascript"></script>
 	</body>
  </html>
