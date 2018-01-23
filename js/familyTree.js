@@ -3797,6 +3797,18 @@ var familyTree = function (isTouchDevice){
     		openNodePopup(element);
     };
 
+    var search = function(value){
+    	if (!value || !value.length)
+    		return [];
+    	var re = new RegExp(value, 'gi');
+    	if (dataGroups.length || dataNodes.length){
+    		var groups = dataGroups.filter(function(g){ return re.exec(g.text);});
+    		var nodes = dataNodes.filter(function(n){ return re.exec(n.name) || re.exec(n.surname) || re.exec(n.description);});
+    		return groups.concat(nodes);
+    	} else 
+    	  return[];
+    };
+
 	return {
 		init: init,	
 		destroy: destroy,
@@ -3821,6 +3833,7 @@ var familyTree = function (isTouchDevice){
 		redo: function() { HistoryManager.redo(); },
 		openNodePopup: openNodePopup,
 		openGroupPopup: openGroupPopup,
-		openElementPopup: openElementPopup
+		openElementPopup: openElementPopup,
+		search: search
 	};
 };
