@@ -139,18 +139,9 @@ var mainCollapsableNavbar = $('#main-navbar-collapse'),
 	undoMenuItem = $('#undo-item'),
 	redoMenuItem = $('#redo-item'),
 	deleteMenuItem = $('#delete-item'),
-	seachField = $('#search-field'),
 	fileNameItem = $('#loaded-file-name'),
 	centerSelItem = $('#center-selection-item'),
 	extendItem = $('#extend-item');
-
-$('#search-btn').on(eventStart, function(e){
-	e.preventDefault();
-	var records = seachField.serializeArray(),
-		values = {};
-	records.forEach(function(rec){values[rec.name] = rec.value;});
-	FamilyTree.search(values);
-});
 
 saveAsPopup.on("hide.bs.modal", function () {
     $('#json-format-opt').click();
@@ -391,6 +382,27 @@ extendItem.on(eventStart, function(){
 $('.navbar').on(eventStart, function(e) {
 	FamilyTree.hideContextMenus();
 });
+
+// search
+var searchInput = $('#search-field input'),
+	searchIcon = $('#search-icon');
+searchInput.on('keydown', function(){	
+	if (event.keyCode == 13){
+		searchIcon.trigger(eventStart);
+	}
+});
+
+searchIcon.on(eventStart, function(){
+	var searchValue = searchInput.val();
+	if (!searchValue || !searchValue.length)
+		return;
+	var results = FamilyTree.search(searchValue);
+	$('#search-result-list').show('toggle');
+});
+
+$('#close-search-result-list').on(eventStart, function(){
+	$('#search-result-list').hide('toggle');
+})
 
 // language
 var langMenu = $('#language-menu');
