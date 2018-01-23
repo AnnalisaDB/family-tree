@@ -219,7 +219,7 @@ input.form-control {
   color: #6c6c6c !important;
 }
 
-.navbar-inverse #search-field input.form-control {
+.navbar-inverse .navbar-form input.form-control {
 	color: #fff;
   background-color: #434343;
   border-color: #080808;
@@ -238,6 +238,18 @@ input.form-control {
 }
 .navbar .navbar-brand:hover {
   color: #9d9d9d;
+}
+.navbar-right .navbar-form{
+  display: inline-block;
+}
+.navbar-inverse .input-group-addon{
+  background-color: #333333;
+  border-color: #080808;
+  color: #9d9d9d;
+  top: 0px;
+}
+#search-icon{
+  cursor: pointer;
 }
 nav.tree-name {
   min-height: 35px !important;
@@ -340,6 +352,60 @@ nav#selection-in-touch-device .navbar-right{
   max-width: 140px;
 }
 
+
+.panel-default {
+    border-color: #101010;
+}
+
+.panel {
+    margin-bottom: 0px;
+    background-color: #fff;
+    border: 1px solid #101010;
+    border-radius: 0px;
+}
+
+.panel-default>.panel-heading{
+      background-color: #1c1c1c;
+      color: #9d9d9d;
+      border-color: #080808;;
+}
+
+.panel-heading{
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+}
+
+.panel-body {
+  padding: 0px;
+}
+
+.table {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 0px;
+}
+
+.table-dark td, .table-dark th, .table-dark thead th {
+    border-color: #32383e;
+}
+
+.table-dark {
+    color: #9d9d9d;
+    background-color: #222222;
+}
+
+.table-dark.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #303030;
+}
+
+.table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th {
+    border-top: 1px solid #101010;
+}
+
+.table>thead>tr>th {
+    border-bottom: 2px solid #101010;
+}
+
 @media (min-width: 768px) {
   .navbar {
     border-radius: 0px;
@@ -361,6 +427,11 @@ nav#selection-in-touch-device .navbar-right{
 
   #field-file-name div {
     margin-top: 10px;
+  }
+
+  .navbar-right .navbar-form{
+    margin-left: 0px;
+    margin-right: 0px;
   }
 
   .navbar-inverse .dropdown-menu li a,
