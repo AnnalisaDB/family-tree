@@ -1380,10 +1380,39 @@ var familyTree = function (isTouchDevice){
 		if (!links || links.empty())
 			return; 
 
-		links.on((isTouchDevice) ? 'touchstart' : 'mousedown', function(link){
-			CtxMenuManager.hide();
-			doSelectChildLink(link)
-		});
+		
+
+		if (isTouchDevice)
+			links
+				.on('touchstart', function(link){
+					CtxMenuManager.hide();
+					doSelectChildLink(link)
+					var sourceEvent = d3.event.sourceEvent;
+					
+					if (!util.selectionMode.isMulti()){
+						startTouchTime = new Date().getTime();
+						touchMove = false
+						stillTouching = true;
+			  			setTimeout(function(){
+			  				checkTapHold(startTouchTime);
+			  			}, 750);
+			  		}
+		  			return;		
+				})
+				.on('touchmove', function (link){
+					if (!util.selectionMode.isMulti())
+						touchMove = true;
+				})
+				.on('touchend', function(link){
+					if (!util.selectionMode.isMulti())
+						stillTouching = false;
+				})
+
+		else
+			links.on('mousedown', function(link){
+				CtxMenuManager.hide();
+				doSelectChildLink(link);
+			});
 
 		return links;
 	};
