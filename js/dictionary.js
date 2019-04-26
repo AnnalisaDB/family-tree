@@ -17,7 +17,8 @@ var dictionary = (function(){
 		'EditSelected': {english: 'Edit selected', italiano: 'Modifica selezionato', deutsch: 'Ausgewählte bearbeiten'},
 		'Extend': {english: 'Extend', italiano: 'Mostra tutto', deutsch: 'Ausdehnen'},
 		'Extension': {english: 'Extension', italiano: 'Formato', deutsch: 'Format'},
-		'FileName': {english: 'File name', italiano: 'Nome file', deutsch: 'Dateiname'},
+		'File': {english: 'File', italiano: 'File', deutsch: 'Datei'},
+        'FileName': {english: 'File name', italiano: 'Nome file', deutsch: 'Dateiname'},
 		'Group': {english: 'Group', italiano: 'Gruppo', deutsch: 'Gruppe'},
 		'Height': {english: 'Height', italiano: 'Altezza', deutsch: 'Höhe'},
 		'Image': {english: 'Image', italiano: 'Immagine', deutsch: 'Image'},
@@ -83,6 +84,7 @@ var dictionary = (function(){
 		$('#select-all-item span.item-text').html(get('SelectAll'));
 		$('#selection-area-item span.item-text').html(get('SelectArea'));	
 		$('#loaded-tree-label span').html(get('LoadedTree'));
+        $('#file-menu span.item-text').html(get('File'));
 		$('#edit-menu span.item-text').html(get('Edit'));
 		$('#view-menu span.item-text').html(get('View'));
 		$('#center-selection-item span.item-text').html(get('CenterSelection'));
