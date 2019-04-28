@@ -17,6 +17,7 @@ var dictionary = (function(){
 		'EditSelected': {english: 'Edit selected', italiano: 'Modifica selezionato', deutsch: 'Ausgewählte bearbeiten'},
 		'Extend': {english: 'Extend', italiano: 'Mostra tutto', deutsch: 'Ausdehnen'},
 		'Extension': {english: 'Extension', italiano: 'Formato', deutsch: 'Format'},
+        'FamilyTree': {english: 'Family tree', italiano: 'Albero genealogico', deutsch: 'Stammbaum'},
 		'File': {english: 'File', italiano: 'File', deutsch: 'Datei'},
         'FileName': {english: 'File name', italiano: 'Nome file', deutsch: 'Dateiname'},
 		'Group': {english: 'Group', italiano: 'Gruppo', deutsch: 'Gruppe'},
@@ -24,7 +25,7 @@ var dictionary = (function(){
 		'Image': {english: 'Image', italiano: 'Immagine', deutsch: 'Image'},
 		'InsertName': {english: 'Insert name', italiano: 'Inserire il nome', deutsch: 'Namen einfügen'},
 		'LinkToPartner': {english: 'Link to partner', italiano: 'Collega al partner', deutsch: 'Verbindung zum Partner'},
-		'LoadedTree': {english: 'Loaded tree', italiano: 'Albero caricato', deutsch: 'Lade Baum'},
+		'LoadedTree': {english: 'Loaded tree', italiano: 'Albero caricato', deutsch: 'Geladener Baum'},
 		'ModifiedTreeAlert': {english: 'Current tree has been modified. Do you want save changes?', italiano: 'L\'albero corrente è stato modificato. Vuoi salvare le modifiche prima di continuare?', deutsch: 'Aktueller Baum wurde geändert. Wollen Sie die Änderungen speichern?'},
 		'MultiSelection': {english: 'Multi selection', italiano: 'Selezione multipla', deutsch: 'Mehrfachauswahl'},
 		'Name': {english: 'Name', italiano: 'Nome', deutsch: 'Vorname'},
@@ -83,7 +84,8 @@ var dictionary = (function(){
 		$('#delete-item span.item-text').html(get('Delete'));
 		$('#select-all-item span.item-text').html(get('SelectAll'));
 		$('#selection-area-item span.item-text').html(get('SelectArea'));	
-		$('#loaded-tree-label span').html(get('LoadedTree'));
+		$('#loaded-tree-label span.item-text').html(get('LoadedTree'));
+        $('#purpose span.item-text').html(get('FamilyTree'));
         $('#file-menu span.item-text').html(get('File'));
 		$('#edit-menu span.item-text').html(get('Edit'));
 		$('#view-menu span.item-text').html(get('View'));

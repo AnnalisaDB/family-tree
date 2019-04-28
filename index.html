@@ -142,12 +142,17 @@
 		<nav id="main-family-tree-navbar" class = "navbar navbar-default navbar-inverse" role = "navigation">   
 		   <div class = "navbar-header">
 				<button type = "button" class = "navbar-toggle" data-toggle = "collapse" data-target = "#main-navbar-collapse">
-					<span class = "sr-only">Family tree</span>
+                    <span class = "sr-only">Family tree</span>
+                    <span class = "icon-bar"></span>
 					<span class = "icon-bar"></span>
 					<span class = "icon-bar"></span>
-					<span class = "icon-bar"></span>
-				</button>				
+				</button>
+                <!--
 				<div class = "navbar-brand">Family tree</div>
+                -->
+                <div href="#" class = "navbar-brand" id="purpose">
+                        <span class="item-text">Family tree</span>
+                </div>
 			</div>		   
 			<div class = "collapse navbar-collapse" id = "main-navbar-collapse">			
 				<ul class = "nav navbar-nav">
@@ -286,7 +291,7 @@
 		</nav>
 		<nav class = "navbar navbar-default navbar-inverse tree-name">
 			<div class = "navbar-header">
-				<div class = "navbar-brand file-name"><span id="loaded-tree-label">Loaded tree</span>: <span id="loaded-tree-name">Default</span></div>
+				<div href = "#" class = "navbar-brand file-name" id="loaded-tree-label"><span class="item-text">Loaded tree</span>: <span id="loaded-tree-name">Default</span></div>
 			</div>
 		</nav>
 		<div class='container-fluid' id="viewport">
