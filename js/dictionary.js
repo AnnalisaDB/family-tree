@@ -1,55 +1,58 @@
 var dictionary = (function(){
-	var lang = lang || 'eng';
+	var lang = lang || 'en';
 
 	var dictMap =  {
-		'AddToGroup': {eng: 'Add to Group', ita: 'Aggiungi a un gruppo'},
-		'Cancel': {eng: 'Cancel', ita: 'Annulla'},
-		'CenterSelection': {eng: 'Center selection', ita: 'Centra selezione'},
-		'ChooseFile': {eng: 'Choose file', ita: 'Scegli il file'},
-		'Close': {eng: 'Close', ita: 'Chiudi'},
-		'Color': {eng: 'Color', ita: 'Colore'},
-		'CreateGroup': {eng: 'Create group', ita: 'Crea gruppo'},
-		'CreateRelative': {eng: 'Create relative', ita: 'Crea familiare'},
-		'Delete': {eng: 'Delete', ita: 'Elimina'},
-		'Description': {eng: 'Description', ita: 'Descrizione'},
-		'DeselectAll': {eng: 'Deselect All', ita: 'Deseleziona tutto'},
-		'Edit': {eng: 'Edit', ita: 'Modifica'},
-		'EditSelected': {eng: 'Edit selected', ita: 'Modifica selezionato'},
-		'Extend': {eng: 'Extend', ita: 'Mostra tutto'},
-		'Extension': {eng: 'Extension', ita: 'Formato'},
-		'FileName': {eng: 'File name', ita: 'Nome file'},
-		'Group': {eng: 'Group', ita: 'Gruppo'},
-		'Height': { eng: 'Height', ita: 'Altezza'},
-		'Image': {eng: 'Image', ita: 'Immagine'},
-		'InsertName': {eng: 'Insert name', ita: 'Inserire il nome'},
-		'LinkToPartner': {eng: 'Link to partner', ita: 'Collega al partner'},
-		'LoadedTree': {eng: 'Loaded tree', ita: 'Albero caricato'},
-		'ModifiedTreeAlert': { eng: 'Current tree has been modified. Do you want save changes?', ita: 'L\'albero corrente è stato modificato. Vuoi salvare le modifiche prima di continuare?'},
-		'MultiSelection': { eng: 'Multi selection', ita: 'Selezione multipla'},
-		'Name': { eng: 'Name', ita: 'Nome'},
-		'NewGroup': { eng: 'New group', ita: 'Nuovo gruppo'},
-		'NewTree': { eng: 'New', ita: 'Nuovo'},
-		'NoEmptyField': { eng: 'This field is required', ita: 'Questo campo non può essere vuoto'},
-		'Open': { eng: 'Open', ita: 'Apri'},
-		'Redo': { eng: 'Redo', ita: 'Riapplica'},
-		'Relative': { eng: 'Relative', ita: 'Familiare'},
-		'RemoveFromGroup': { eng: 'Remove from group', ita: 'Rimuovi dal gruppo' },
-		'Save': { eng: 'Save', ita: 'Salva'},
-		'SaveAs': { eng: 'Save as', ita: 'Salva come'},
-		'Scale': { eng: 'Scale', ita: 'Scala'},
-		'SelectAll': { eng: 'Select all', ita: 'Seleziona tutto' },
-		'SelectArea': {eng: 'Select area', ita: 'Area di Selezione'},
-		'selectedItems': { eng: 'selected items', ita: 'elementi selezionati' },
-		'Sex': { eng: 'Sex', ita: 'Sesso' },
-		'ShowInfo': { eng: 'Show info', ita: 'Informazioni' },
-		'Surname': { eng: 'Surname', ita: 'Cognome' },
-		'Text': { eng: 'Text', ita: 'Testo' },
-		'TextSize': { eng: 'Text size', ita: 'Dimensione del testo' },
-		'Undo': { eng: 'Undo', ita: 'Annulla'},	
-		'View': { eng: 'View', ita: 'Vista'},	
-		'Warning': 	{ eng: 'Warning', ita: 'Attenzione'},
-		'Width': { eng: 'Width', ita: 'Lunghezza'},
-		'Yes': {eng: 'Yes', ita: 'S&igrave'},	
+		'AddToGroup': {en: 'Add to Group', it: 'Aggiungi a un gruppo', de: 'Zur Gruppe hinzufügen', hu: 'Csoporthoz hozzáadni'},
+		'Cancel': {en: 'Cancel', it: 'Annulla', de: 'Abbrechen', hu: 'Mégsem'},
+		'CenterSelection': {en: 'Center selection', it: 'Centra selezione', de: 'Auswahl zentrieren', hu: 'Központválasztás'},
+		'ChooseFile': {eng: 'Choose file', it: 'Scegli il file', de: 'Datei wählen', hu: 'Válasszon egy fájlt'},
+		'Close': {en: 'Close', it: 'Chiudi', de: 'Schließen', hu:'Bezárás'},
+		'Color': {en: 'Color', it: 'Colore', de: 'Farbe', hu:'Szín'},
+		'CreateGroup': {en: 'Create group', it: 'Crea gruppo', de: 'Gruppe erstellen', hu: 'Csoport létrehozása'},
+		'CreateRelative': {en: 'Create relative', it: 'Crea familiare', de: 'Familienmitglied erstellen', hu: 'Családtag létrehozása'},
+		'Delete': {en: 'Delete', it: 'Elimina', de: 'Löschen', hu: 'Törlés'},
+		'Description': {en: 'Description', it: 'Descrizione', de: 'Beschreibung', hu: 'Leírás'},
+		'DeselectAll': {en: 'Deselect All', it: 'Deseleziona tutto', de: 'Alle Markierungen aufheben', hu: 'Az összes kijelölésének megszüntetése'},
+		'Edit': {en: 'Edit', it: 'Modifica', de: 'Bearbeiten', hu: 'Szerkesztés'},
+		'EditSelected': {en: 'Edit selected', it: 'Modifica selezionato', de: 'Ausgewählte bearbeiten', hu: 'A kiválasztott szerkesztés'},
+		'Extend': {en: 'Extend', it: 'Mostra tutto', de: 'Ausdehnen', hu: 'Terjeszkedés'},
+		'Extension': {en: 'Extension', it: 'Formato', de: 'Format', hu: 'Formátum'},
+        'FamilyTree': {en: 'Family tree', it: 'Albero genealogico', de: 'Stammbaum', hu: 'Családfa'},
+		'File': {en: 'File', it: 'File', de: 'Datei', hu: 'Fájl'},
+        'FileName': {en: 'File name', it: 'Nome file', de: 'Dateiname', hu: 'Fájlnév'},
+		'Group': {en: 'Group', it: 'Gruppo', de: 'Gruppe', hu: 'Csoport'},
+		'Height': {en: 'Height', it: 'Altezza', de: 'Höhe', hu: 'Magasság'},
+		'Image': {en: 'Image', it: 'Immagine', de: 'Bild', hu: 'Kép'},
+		'InsertName': {en: 'Insert name', it: 'Inserire il nome', de: 'Namen einfügen', hu: 'Nevet beadni'},
+		'LinkToPartner': {en: 'Link to partner', it: 'Collega al partner', de: 'Paarbeziehung', hu: 'Párkapcsolat'},
+		'LoadedTree': {en: 'Loaded tree', it: 'Albero caricato', de: 'Geladener Baum', hu: 'Töltött fa'},
+		'ModifiedTreeAlert': {en: 'Current tree has been modified. Do you want save changes?', it: 'L\'albero corrente è stato modificato. Vuoi salvare le modifiche prima di continuare?', de: 'Aktueller Baum wurde geändert. Wollen Sie die Änderungen speichern?', hu: 'Az aktuális fát módosították. Szeretné a változtatásokat menteni?'},
+		'MultiSelection': {en: 'Multi selection', it: 'Selezione multipla', de: 'Mehrfachauswahl', hu: 'Többszörös kiválasztás'},
+		'Name': {en: 'Name', it: 'Nome', de: 'Vorname', hu: 'Keresztnév'},
+		'NewGroup': {en: 'New group', it: 'Nuovo gruppo', de: 'Neue Gruppe', hu: 'Új csoport'},
+		'NewTree': {en: 'New', it: 'Nuovo', de: 'Neu', hu: 'Új'},
+		'No': {en: 'No', it: 'No', de: 'Nein', hu: 'Nem'},
+        'NoEmptyField': {en: 'This field is required', it: 'Questo campo non può essere vuoto', de: 'Dieses Feld ist erforderlich', hu: 'Ez a mező kötelező'},
+		'Open': {en: 'Open', it: 'Apri', de: 'Öffnen', hu: 'Megnyitás'},
+		'Redo': {en: 'Redo', it: 'Riapplica', de: 'Wiederholen', hu: 'Ismét'},
+		'Relative': {en: 'Relative', it: 'Familiare', de: 'Familienmitglied', hu: 'Családtag'},
+		'RemoveFromGroup': {en: 'Remove from group', it: 'Rimuovi dal gruppo', de: 'Aus Gruppe entfernen', hu: 'Eltávolítás a csoportból' },
+		'Save': {en: 'Save', it: 'Salva', de: 'Speichern', hu: 'Mentés'},
+		'SaveAs': {en: 'Save as', it: 'Salva come', de: 'Speichern als', hu: 'Mentés másként'},
+		'Scale': {en: 'Scale', it: 'Scala', de: 'Skala', hu: 'Skála'},
+		'SelectAll': {en: 'Select all', it: 'Seleziona tutto', de: 'Alles auswählen', hu: 'Az összes kijelölése'},
+		'SelectArea': {en: 'Select area', it: 'Area di Selezione', de: 'Bereich auswählen', hu: 'Terület kijelölése'},
+		'selectedItems': {en: 'selected items', it: 'elementi selezionati', de: 'ausgewählte Elemente', hu: 'kiválasztott elem'},
+		'Sex': {en: 'Sex', it: 'Sesso', de: 'Geschlecht', hu: 'Nem'},
+		'ShowInfo': {en: 'Show info', it: 'Informazioni', de: 'Info anzeigen', hu: 'Információ megjelenítése'},
+		'Surname': {en: 'Surname', it: 'Cognome', de:'Familienname', hu: 'Családinév'},
+		'Text': {en: 'Text', it: 'Testo', de: 'Text', hu: 'Szöveg'},
+		'TextSize': {en: 'Text size', it: 'Dimensione del testo', de: 'Textgröße', hu: 'Szövegméret'},
+		'Undo': {en: 'Undo', it: 'Annulla', de: 'Rückgängig', hu: 'Visszavonás'},	
+		'View': {en: 'View', it: 'Vista', de: 'Ansicht', hu: 'Nézet'},	
+		'Warning': 	{en: 'Warning', it: 'Attenzione', de: 'Warnung', hu: 'Figyelmeztetés'},
+		'Width': {en: 'Width', it: 'Lunghezza', de: 'Breite', hu: 'Szélesség'},
+		'Yes': {en: 'Yes', it: 'Si', de: 'Ja', hu: 'Igen'},
 	};
 
 	function setLanguage(newLang){
@@ -82,7 +85,9 @@ var dictionary = (function(){
 		$('#delete-item span.item-text').html(get('Delete'));
 		$('#select-all-item span.item-text').html(get('SelectAll'));
 		$('#selection-area-item span.item-text').html(get('SelectArea'));	
-		$('#loaded-tree-label span').html(get('LoadedTree'));
+		$('#loaded-tree-label span.item-text').html(get('LoadedTree'));
+        $('#purpose span.item-text').html(get('FamilyTree'));
+        $('#file-menu span.item-text').html(get('File'));
 		$('#edit-menu span.item-text').html(get('Edit'));
 		$('#view-menu span.item-text').html(get('View'));
 		$('#center-selection-item span.item-text').html(get('CenterSelection'));
@@ -95,18 +100,20 @@ var dictionary = (function(){
 		var $alertPopup = $('#alert-popup'); 
 		$alertPopup.find('.modal-header h4').html(get('Warning'));
 		$alertPopup.find('.modal-body').html(get('ModifiedTreeAlert'));
-		$alertPopup.find('.modal-footer ok').html(get('Yes'));
+		$alertPopup.find('.modal-footer #yes').html(get('Yes'));
+        $alertPopup.find('.modal-footer #no').html(get('No'));
 
 		var $savePopup = $('#save-as-popup');
 		$savePopup.find('.modal-header .modal-title').html(get('Save'));
 		$savePopup.find('#file-format-label').html(get('Extension') + ':');
-		$savePopup.find('#svg-format-opt input').html(get('Image')+ 'SVG');
-		$savePopup.find('#png-format-opt input').html(get('Image')+ 'PNG');
+        $savePopup.find('.col-sm-10 #json-format-opt').html('JSON ' + get('File'));
+		$savePopup.find('.col-sm-10 #svg-format-opt').html('SVG ' + get('Image'));
+		$savePopup.find('.col-sm-10 #png-format-opt').html('PNG ' + get('Image'));
 		$savePopup.find('#field-file-name label').html(get('FileName'));
 		$savePopup.find('#input-name').attr('placeholder', get('InsertName')).attr('data-error', get('NoEmptyField'));
 		$savePopup.find('#field-scale label').html(get('Scale') + ' (%)');
-		$savePopup.find('.modal-footer #save').html(get('Save') );
-		$savePopup.find('.modal-footer #cancel').html(get('Cancel') );
+		$savePopup.find('.modal-footer #save').html(get('Save'));
+		$savePopup.find('.modal-footer #cancel').html(get('Cancel'));
 
 		var $nodePopup = $('#node-popup');
 		$nodePopup.find('.modal-header .modal-title').html(get('Relative'));
@@ -114,9 +121,9 @@ var dictionary = (function(){
 		$nodePopup.find('#input-name').attr('placeholder', get('InsertName')).attr('data-error', get('NoEmptyField'));
 		$nodePopup.find('#field-surname label').html(get('Surname') + ':');
 		$nodePopup.find('#field-sex label').html(get('Sex') + ':');
-		$nodePopup.find('#ffield-description label').html(get('Description') + ':');
-		$savePopup.find('.modal-footer #submit').html(get('Save') );
-		$savePopup.find('.modal-footer #cancel').html(get('Cancel') );
+		$nodePopup.find('#field-description label').html(get('Description') + ':');
+		$nodePopup.find('.modal-footer #submit').html(get('Save'));
+		$nodePopup.find('.modal-footer #cancel').html(get('Cancel'));
 
 		var $groupPopup = $('#group-popup');
 		$groupPopup.find('.modal-header .modal-title').html(get('Group'));
@@ -125,6 +132,8 @@ var dictionary = (function(){
 		$groupPopup.find('#field-width label').html(get('Width') + ':');
 		$groupPopup.find('#field-height label').html(get('Height') + ':');
 		$groupPopup.find('#field-color label').html(get('Color') + ':');
+        $groupPopup.find('.modal-footer #submit').html(get('Save'));
+        $groupPopup.find('.modal-footer #cancel').html(get('Cancel'));
 
 		var $openTreePopup = $('#open-file-popup');
 		$openTreePopup.find('.modal-header .modal-title').html(get('Open'));

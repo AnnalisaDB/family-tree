@@ -89,8 +89,8 @@ var tooltipManager = function(isTouchDevice){
         if (!tooltip || tooltip.empty()) return;
 
         _update(data);
-        tooltip.transition().duration(100).style('opacity', 0.85);
-
+        tooltip.transition().duration(100).style('opacity', 1.0);     /* to set tooltip transparent, decrease the value 1.0 */
+        
         if (isTouchDevice)
             tooltip.style('pointer-events', 'all');
     };
@@ -110,20 +110,22 @@ var tooltipManager = function(isTouchDevice){
 
     function _getNodeHTML(data){
     	var html = '';
-    	if (!data.isNode)
+    	if (!data.isNode){
     		return html;
-        
-        html += '<tr class="tooltip-info"><td>' + dictionary.get('Name') + '</td><td><span class="tooltip-value">' 
-        		+ (data.name || '---')
-                + '</span></td></tr><tr class="tooltip-info"><td>' + dictionary.get('Surname') + '</td><td><span class="tooltip-value">' 
-                + (data.surname || '---');
+        }
+        html += '<tr class="tooltip-info"><td>';
+        if(data.name){
+            html += dictionary.get('Name') + '</td><td><span class="tooltip-value">' + data.name;
+        }
+        if(data.surname){
+            html += '</span></td></tr><tr class="tooltip-info"><td>' + dictionary.get('Surname') + '</td><td><span class="tooltip-value">' + data.surname;
+        }
         if (data.description){
         	var lines = data.description.split(/\r\n|\r|\n/);
         	lines.forEach(function(line, i){
         		html += '</span></td></tr><tr class="tooltip-info"><td>' + ((i==0) ? dictionary.get('Description') : '') + '</td><td><span class="tooltip-value">' + line;
         	});
-        } else 
-            html += '</span></td></tr><tr class="tooltip-info"><td>' + dictionary.get('Description') + '</td><td><span class="tooltip-value">---';
+        }
         html += '</span></td></tr>';
 	    return html;
     };
@@ -143,9 +145,8 @@ var tooltipManager = function(isTouchDevice){
         		}            		
         		html += '<tr class="tooltip-info"><td></td><td><span class="tooltip-value">' + line + '</span></td></tr>';
         	});
-        } else
-        	html += '---</span></td></tr>';
-	    return html;
+        }
+	return html;
     };
 
     return {
