@@ -212,8 +212,8 @@ input.form-control {
 
 .navbar-inverse .dropdown-menu,
 .context-menu .dropdown-menu {
-  font-size: 14px;                          /* increased from 12 to 14 */
-  min-width: 210px;                         /* increased from 185 to 200 caused by German language pack */
+  font-size: 14px;
+  min-width: 230px;                         /* increased from 185 to 230 caused by Hungarian language pack */
   background-color: #333333;
 }
 
@@ -348,7 +348,7 @@ nav .dropdown-menu {
   -webkit-animation-fill-mode: forwards;  
   animation-fill-mode: forwards; 
   -webkit-transform: scale(1, 0);
-  display: block;  
+  display: block;
   transition: all 0.2s ease-out;
   -webkit-transition: all 0.2s ease-out;
 }
@@ -360,12 +360,14 @@ nav .dropdown-menu {
 .dropdown-submenu .dropdown-menu {
     top: 0;
     left: 100%;
-    margin-top: -1px;
+    margin-left: -1px!important;
 }
 
 .dropdown-submenu .dropdown-menu.dropdown-menu-left {
-    left: -100%!important;
-    margin-left: -1px!important;
+    left: -200px!important;
+    margin-left: 1px!important;
+    min-width: 200px!important;
+    width: 200px!important; 
 }
 
 .dropdown-submenu .dropdown-menu.dropdown-menu-up {

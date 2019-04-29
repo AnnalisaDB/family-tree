@@ -233,11 +233,12 @@
 				</ul>
 				<ul class = "nav navbar-nav navbar-right">
 					<li class = "dropdown">
-						<a href = "#" class = "dropdown-toggle" data-toggle = "dropdown" id="language-menu">English<b class = "caret"></b></a>
+						<a href = "#" class = "dropdown-toggle" data-toggle = "dropdown" id="language-menu">EN<b class = "caret"></b></a>
                         <ul class = "dropdown-menu languages">
-							<li class="active" id="eng-item"><a href = "#">English</a></li>
-							<li id="ita-item"><a href = "#">Italiano</a></li>
-                            <li id="deu-item"><a href = "#">Deutsch</a></li>
+							<li class="active" id="eng-item"><a href = "#">EN</a></li>
+							<li id="ita-item"><a href = "#">IT</a></li>
+                            <li id="deu-item"><a href = "#">DE</a></li>
+                            <li id="deu-item"><a href = "#">HU</a></li>
 						</ul>
 					</li>
 					<form class="navbar-form hide" id="search-field">
@@ -316,19 +317,35 @@
 		            	<div class="modal-body">
 		              		<form class="form-horizontal" role="form" data-toggle="buttons">
 		              			<div class="form-group" id="field-file-format">
-							  		<label  class="col-sm-2 control-label" for="input-format" id="file-format-label">Extension:</label>
+							  		<!--
+                                    <label  class="col-sm-2 control-label" for="input-format" id="file-format-label">Extension:</label>
 									<div class="col-sm-10" data-toggle="buttons">
 								  		<label class="btn btn-default active" id="json-format-opt" onclick="$('#save-as-popup #input-format').val($(this).find('input').val()).trigger('change');">
-									    	<input type="radio" value="json" autocomplete="off">File JSON
+									    	<input type="radio" value="json" autocomplete="off">JSON File
 										</label>
 										<label class="btn btn-default" id="svg-format-opt" onclick="$('#save-as-popup #input-format').val($(this).find('input').val()).trigger('change');">
-									    	<input type="radio" value="svg" autocomplete="off">Image SVG
+									    	<input type="radio" value="svg" autocomplete="off">SVG Image
 										</label>
 										<label class="btn btn-default" id="png-format-opt" onclick="$('#save-as-popup #input-format').val($(this).find('input').val()).trigger('change')">
-											<input type="radio" value="png"  autocomplete="off">Image PNG
+											<input type="radio" value="png" autocomplete="off">PNG Image
 										</label>
 									</div>
 									<input class="form-control hide" id="input-format" name="format" value="json">
+                                    -->
+                                    <label  class="col-sm-2 control-label" for="input-format" id="file-format-label">Extension:</label>
+									<div class="col-sm-10" data-toggle="buttons">
+								  		<label class="btn btn-default active" id="json-format-opt" onclick="$('#save-as-popup #input-format').val($(this).find('input').val()).trigger('change');">JSON File
+									    	<input type="radio" value="json" autocomplete="off">
+										</label>
+										<label class="btn btn-default" id="svg-format-opt" onclick="$('#save-as-popup #input-format').val($(this).find('input').val()).trigger('change');">SVG Image
+									    	<input type="radio" value="svg" autocomplete="off">
+										</label>
+										<label class="btn btn-default" id="png-format-opt" onclick="$('#save-as-popup #input-format').val($(this).find('input').val()).trigger('change')">PNG Image
+											<input type="radio" value="png" autocomplete="off">
+										</label>
+									</div>
+									<input class="form-control hide" id="input-format" name="format" value="json">
+                                    <!--   Test-Ende                                                                                    -->
 								</div>
 								<div class="form-group has-feedback" id="field-file-name">
 		                    		<label  class="col-sm-2 control-label" for="input-name">File name</label>
